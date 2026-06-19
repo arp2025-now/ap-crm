@@ -1,92 +1,98 @@
-"use client";
+'use client'
 
-import { useState, useEffect, useCallback } from "react";
-import type { Lead } from "@/lib/types";
-import { mockLeads } from "@/lib/mock-data";
-import { logActivity } from "@/hooks/use-activity-log";
+import { useState, useEffect, useCallback } from 'react'
+import type { Lead } from '@/lib/types'
+import type { DbLead } from '@/lib/supabase/types'
+import { createClient } from '@/lib/supabase/client'
 
-const STORAGE_KEY = "crm-leads";
+function dbToLead(row: DbLead): Lead {
+  return {
+    id: row.id,
+    customerName: row.full_name,
+    customerEmail: row.email ?? undefined,
+    phone: row.phone ?? undefined,
+    company: row.company ?? undefined,
+    status: row.status,
+    source: row.source ?? undefined,
+    heatLevel: (row.heat_level as Lead['heatLevel']) ?? 'cold',
+    pipelineValue: row.pipeline_value ?? 0,
+    aiScore: row.ai_score ?? undefined,
+    notes: row.notes ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    customFields: {},
+  }
+}
 
-type LeadInput = Omit<Lead, "id" | "serialNumber" | "createdAt" | "updatedAt" | "createdBy" | "updatedBy" | "customerId" | "assignedAgentId" | "lastContactAt">;
+function leadToDb(data: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>): Partial<DbLead> {
+  return {
+    full_name: data.customerName,
+    email: data.customerEmail ?? null,
+    phone: data.phone ?? null,
+    company: data.company ?? null,
+    status: data.status,
+    source: data.source ?? 'אחר',
+    heat_level: data.heatLevel ?? 'cold',
+    pipeline_value: data.pipelineValue ?? 0,
+    ai_score: data.aiScore ?? null,
+    notes: data.notes ?? null,
+  }
+}
 
 export function useLeads() {
-  const [leads, setLeads] = useState<Lead[]>(mockLeads);
+  const [leads, setLeads] = useState<Lead[]>([])
+  const supabase = createClient()
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setLeads(JSON.parse(saved));
-    } catch { localStorage.removeItem(STORAGE_KEY); }
-  }, []);
+  const load = useCallback(async () => {
+    const { data } = await supabase
+      .from('leads')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (data) setLeads(data.map(dbToLead))
+  }, [supabase])
 
-  const persist = useCallback((updated: Lead[]) => {
-    setLeads(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  }, []);
+  useEffect(() => { load() }, [load])
 
-  const nextSerial = useCallback(
-    (current: Lead[]) => Math.max(0, ...current.map((l) => l.serialNumber ?? 0)) + 1,
-    []
-  );
+  const addLead = useCallback(async (data: Omit<Lead, 'id' | 'serialNumber' | 'createdAt' | 'updatedAt' | 'createdBy' | 'updatedBy' | 'customerId' | 'assignedAgentId' | 'lastContactAt'>) => {
+    const { data: row, error } = await supabase
+      .from('leads')
+      .insert(leadToDb(data))
+      .select()
+      .single()
+    if (error) throw error
+    const newLead = dbToLead(row)
+    setLeads((prev) => [newLead, ...prev])
+    return newLead
+  }, [supabase])
 
-  const addLead = useCallback(
-    (data: LeadInput) => {
-      const now = new Date().toISOString();
-      const newLead: Lead = {
-        ...data,
-        id: `lead-${Date.now()}`,
-        serialNumber: nextSerial(leads),
-        customerId: `cust-${Date.now()}`,
-        assignedAgentId: "agent-1",
-        lastContactAt: now,
-        createdAt: now,
-        updatedAt: now,
-        createdBy: "אני",
-        updatedBy: "אני",
-        customFields: data.customFields ?? {},
-      };
-      persist([newLead, ...leads]);
-      logActivity("create", "lead", newLead.id, data.customerName, `ליד חדש #${newLead.serialNumber}`);
-    },
-    [leads, persist, nextSerial]
-  );
+  const updateLead = useCallback(async (id: string, data: Partial<Lead>) => {
+    const updates: Partial<DbLead> = {}
+    if (data.customerName !== undefined) updates.full_name = data.customerName
+    if (data.customerEmail !== undefined) updates.email = data.customerEmail
+    if (data.phone !== undefined) updates.phone = data.phone
+    if (data.company !== undefined) updates.company = data.company
+    if (data.status !== undefined) updates.status = data.status
+    if (data.source !== undefined) updates.source = data.source
+    if (data.heatLevel !== undefined) updates.heat_level = data.heatLevel
+    if (data.pipelineValue !== undefined) updates.pipeline_value = data.pipelineValue
+    if (data.notes !== undefined) updates.notes = data.notes
 
-  const updateLead = useCallback(
-    (id: string, data: Partial<Lead>) => {
-      const now = new Date().toISOString();
-      const prev = leads.find((l) => l.id === id);
-      persist(
-        leads.map((l) =>
-          l.id === id ? { ...l, ...data, updatedAt: now, updatedBy: "אני" } : l
-        )
-      );
-      if (prev) {
-        const changes: Record<string, { from?: string | number | null; to?: string | number | null }> = {};
-        for (const key of Object.keys(data) as (keyof Lead)[]) {
-          if (key === "updatedAt" || key === "updatedBy") continue;
-          const oldVal = prev[key];
-          const newVal = data[key];
-          if (oldVal !== newVal) {
-            changes[key] = { from: oldVal as any, to: newVal as any };
-          }
-        }
-        const action = data.status === "converted" ? "convert" as const
-          : data.status && data.status !== prev.status ? "status_change" as const
-          : "update" as const;
-        logActivity(action, "lead", id, prev.customerName, undefined, Object.keys(changes).length > 0 ? changes : undefined);
-      }
-    },
-    [leads, persist]
-  );
+    const { data: row, error } = await supabase
+      .from('leads')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+    if (error) throw error
+    const updated = dbToLead(row)
+    setLeads((prev) => prev.map((l) => (l.id === id ? updated : l)))
+  }, [supabase])
 
-  const deleteLead = useCallback(
-    (id: string) => {
-      const prev = leads.find((l) => l.id === id);
-      persist(leads.filter((l) => l.id !== id));
-      if (prev) logActivity("delete", "lead", id, prev.customerName);
-    },
-    [leads, persist]
-  );
+  const deleteLead = useCallback(async (id: string) => {
+    const { error } = await supabase.from('leads').delete().eq('id', id)
+    if (error) throw error
+    setLeads((prev) => prev.filter((l) => l.id !== id))
+  }, [supabase])
 
-  return { leads, addLead, updateLead, deleteLead };
+  return { leads, addLead, updateLead, deleteLead }
 }
