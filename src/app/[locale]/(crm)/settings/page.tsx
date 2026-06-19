@@ -6,10 +6,12 @@ import {
   Upload, Trash2, RotateCcw, Settings, Palette, Building2, Image,
   User, Users, Shield, Mail, Phone, Globe, MapPin, Hash, Plus,
   Pencil, CheckCircle2, XCircle, Crown, Eye, UserCheck, Sparkles,
+  GripVertical, GitBranch,
 } from "lucide-react";
 import { useBranding } from "@/hooks/use-branding";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { useCrmUsers } from "@/hooks/use-crm-users";
+import { usePipelineStages } from "@/hooks/use-pipeline-stages";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -19,13 +21,14 @@ import {
 import { getInitials } from "@/lib/utils";
 import type { CrmUser, CrmUserRole, PermissionLevel } from "@/lib/types";
 
-const TABS = ["profile", "branding", "users"] as const;
+const TABS = ["profile", "branding", "users", "pipeline"] as const;
 type SettingsTab = typeof TABS[number];
 
 const TAB_ICONS: Record<SettingsTab, typeof User> = {
   profile: User,
   branding: Palette,
   users: Users,
+  pipeline: GitBranch,
 };
 
 const ROLE_CONFIG: Record<CrmUserRole, { icon: typeof Crown; color: string; bg: string }> = {
@@ -46,9 +49,11 @@ export default function SettingsPage() {
   const { branding, updateBranding, resetBranding } = useBranding();
   const { profile, updateProfile } = useUserProfile();
   const { users, addUser, updateUser, deleteUser, DEFAULT_PERMISSIONS } = useCrmUsers();
+  const { stages, addStage, deleteStage } = usePipelineStages();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
+  const [newStageName, setNewStageName] = useState("");
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<CrmUser | null>(null);
   const [formName, setFormName] = useState("");
@@ -99,6 +104,12 @@ export default function SettingsPage() {
     }
     setUserDialogOpen(false);
   };
+
+  function handleAddStage() {
+    if (!newStageName.trim()) return;
+    addStage({ name: newStageName.trim(), color: '#6366f1' });
+    setNewStageName('');
+  }
 
   return (
     <div className="space-y-6 pb-10">
@@ -491,6 +502,61 @@ export default function SettingsPage() {
                 })}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Pipeline Stages Tab ── */}
+      {activeTab === "pipeline" && (
+        <div className="max-w-2xl">
+          <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-indigo-500/15 flex items-center justify-center">
+                <GitBranch className="h-5 w-5 text-indigo-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold">שלבי תהליך מכירה</h2>
+                <p className="text-xs text-muted-foreground">ניהול שלבי הפייפליין</p>
+              </div>
+            </div>
+
+            <section className="space-y-4">
+              <div className="space-y-2">
+                {stages.sort((a, b) => a.order - b.order).map((stage) => (
+                  <div key={stage.id} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 border rounded-lg">
+                    <GripVertical className="w-4 h-4 text-gray-300" />
+                    <div
+                      className="w-3 h-3 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: stage.color }}
+                    />
+                    <span className="flex-1 text-sm">{stage.name}</span>
+                    <button
+                      onClick={() => deleteStage(stage.id)}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                      aria-label="מחק שלב"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  value={newStageName}
+                  onChange={(e) => setNewStageName(e.target.value)}
+                  placeholder="שם שלב חדש..."
+                  className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-background"
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleAddStage(); }}
+                />
+                <button
+                  onClick={handleAddStage}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 flex items-center gap-1"
+                >
+                  <Plus className="w-4 h-4" />
+                  הוסף
+                </button>
+              </div>
+            </section>
           </div>
         </div>
       )}

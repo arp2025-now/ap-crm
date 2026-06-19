@@ -396,7 +396,8 @@
     "confirmDeleteUser": "Delete this user?",
     "tabProfile": "Profile",
     "tabBranding": "Branding",
-    "tabUsers": "Users"
+    "tabUsers": "Users",
+    "tabPipeline": "Pipeline Stages"
   },
   "calendar": {
     "title": "Calendar",

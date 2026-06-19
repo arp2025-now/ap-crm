@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
-import { PIPELINE_STAGES, type PipelineStage } from '@/lib/constants'
+import { createServiceClient } from '@/lib/supabase/server'
 
 export async function PATCH(
   request: NextRequest,
@@ -13,21 +12,35 @@ export async function PATCH(
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
-  const stage = body.stage as PipelineStage
 
-  if (!PIPELINE_STAGES.includes(stage)) {
-    return NextResponse.json({ error: 'Invalid stage' }, { status: 400 })
+  const { status } = body as { status?: string }
+  if (!status) {
+    return NextResponse.json({ error: 'status is required' }, { status: 400 })
   }
 
-  const supabase = await createServerSupabaseClient()
-  const { error } = await supabase
+  const supabase = createServiceClient()
+
+  // Validate stage exists
+  const { data: stage } = await supabase
+    .from('pipeline_stages')
+    .select('name')
+    .eq('name', status)
+    .single()
+
+  if (!stage) {
+    return NextResponse.json({ error: `Invalid stage: ${status}` }, { status: 400 })
+  }
+
+  const { data, error } = await supabase
     .from('leads')
-    .update({ status: stage })
+    .update({ status })
     .eq('id', id)
+    .select()
+    .single()
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true })
+  return NextResponse.json(data)
 }
