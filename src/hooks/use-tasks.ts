@@ -1,97 +1,98 @@
-﻿"use client";
+'use client'
 
-import { useState, useEffect, useCallback } from "react";
-import type { Task, TaskStatus, TaskPriority } from "@/lib/types";
-import { logActivity } from "@/hooks/use-activity-log";
+import { useState, useEffect, useCallback } from 'react'
+import type { Task, TaskStatus, TaskPriority } from '@/lib/types'
+import type { DbTask } from '@/lib/supabase/types'
+import { createClient } from '@/lib/supabase/client'
 
-const STORAGE_KEY = "crm-tasks";
-
-function loadTasks(): Task[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
+function dbToTask(row: DbTask): Task {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.details ?? '',
+    status: row.completed_at ? 'done' : 'todo',
+    priority: (row.priority as TaskPriority) ?? 'medium',
+    dueDate: row.due_at?.split('T')[0],
+    linkedLeadId: row.lead_id ?? undefined,
+    linkedCustomerId: row.client_id ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.created_at,
+    createdBy: row.assigned_to ?? '',
   }
 }
 
-function saveTasks(tasks: Task[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-}
-
 export function useTasks() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([])
+  const supabase = createClient()
 
-  useEffect(() => {
-    setTasks(loadTasks());
-  }, []);
+  const load = useCallback(async () => {
+    const { data } = await supabase
+      .from('tasks')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (data) setTasks((data as DbTask[]).map(dbToTask))
+  }, [supabase])
 
-  const save = useCallback((updated: Task[]) => {
-    setTasks(updated);
-    saveTasks(updated);
-  }, []);
+  useEffect(() => { load() }, [load])
 
-  const addTask = useCallback((data: {
-    title: string;
-    description?: string;
-    priority?: TaskPriority;
-    dueDate?: string;
-    linkedLeadId?: string;
-    linkedLeadName?: string;
-    linkedCustomerId?: string;
-    linkedCustomerName?: string;
+  const addTask = useCallback(async (data: {
+    title: string
+    description?: string
+    priority?: TaskPriority
+    dueDate?: string
+    linkedLeadId?: string
+    linkedLeadName?: string
+    linkedCustomerId?: string
+    linkedCustomerName?: string
   }) => {
-    const task: Task = {
-      id: `task-${Date.now()}`,
-      title: data.title,
-      description: data.description || "",
-      status: "todo",
-      priority: data.priority || "medium",
-      dueDate: data.dueDate,
-      linkedLeadId: data.linkedLeadId,
-      linkedLeadName: data.linkedLeadName,
-      linkedCustomerId: data.linkedCustomerId,
-      linkedCustomerName: data.linkedCustomerName,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      createdBy: "×¢× ×ª",
-    };
-    save([task, ...tasks]);
-    logActivity("create", "task", task.id, data.title);
-    return task;
-  }, [tasks, save]);
+    const { data: row, error } = await supabase
+      .from('tasks')
+      .insert({
+        title: data.title,
+        details: data.description ?? null,
+        priority: data.priority ?? 'medium',
+        due_at: data.dueDate ? `${data.dueDate}T00:00:00Z` : null,
+        lead_id: data.linkedLeadId ?? null,
+        client_id: data.linkedCustomerId ?? null,
+      })
+      .select()
+      .single()
+    if (error) throw error
+    const task = dbToTask(row as DbTask)
+    setTasks((prev) => [task, ...prev])
+    return task
+  }, [supabase])
 
-  const updateTask = useCallback((id: string, data: Partial<Task>) => {
-    const prev = tasks.find((t) => t.id === id);
-    save(tasks.map((t) => (t.id === id ? { ...t, ...data, updatedAt: new Date().toISOString() } : t)));
-    if (prev) {
-      if (data.status && data.status !== prev.status) {
-        logActivity("status_change", "task", id, prev.title, undefined, { status: { from: prev.status, to: data.status } });
-      } else {
-        const changes = Object.keys(data).filter(
-          (k) => (data as unknown as Record<string, unknown>)[k] !== (prev as unknown as Record<string, unknown>)[k]
-        );
-        logActivity("update", "task", id, prev.title, changes.join(", "));
-      }
-    }
-  }, [tasks, save]);
+  const updateTask = useCallback(async (id: string, data: Partial<Task>) => {
+    const updates: Partial<DbTask> = {}
+    if (data.title !== undefined) updates.title = data.title
+    if (data.description !== undefined) updates.details = data.description
+    if (data.priority !== undefined) updates.priority = data.priority
+    if (data.dueDate !== undefined) updates.due_at = data.dueDate ? `${data.dueDate}T00:00:00Z` : null
+    if (data.status === 'done') updates.completed_at = new Date().toISOString()
+    if (data.status === 'todo' || data.status === 'in_progress') updates.completed_at = null
 
-  const deleteTask = useCallback((id: string) => {
-    const prev = tasks.find((t) => t.id === id);
-    save(tasks.filter((t) => t.id !== id));
-    if (prev) {
-      logActivity("delete", "task", id, prev.title);
-    }
-  }, [tasks, save]);
+    const { data: row, error } = await supabase
+      .from('tasks')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+    if (error) throw error
+    setTasks((prev) => prev.map((t) => (t.id === id ? dbToTask(row as DbTask) : t)))
+  }, [supabase])
 
-  const getTasksForLead = useCallback((leadId: string) => {
-    return tasks.filter((t) => t.linkedLeadId === leadId);
-  }, [tasks]);
+  const deleteTask = useCallback(async (id: string) => {
+    const { error } = await supabase.from('tasks').delete().eq('id', id)
+    if (error) throw error
+    setTasks((prev) => prev.filter((t) => t.id !== id))
+  }, [supabase])
 
-  const getTasksForCustomer = useCallback((customerId: string) => {
-    return tasks.filter((t) => t.linkedCustomerId === customerId);
-  }, [tasks]);
+  const getTasksForLead = useCallback((leadId: string) =>
+    tasks.filter((t) => t.linkedLeadId === leadId), [tasks])
 
-  return { tasks, addTask, updateTask, deleteTask, getTasksForLead, getTasksForCustomer };
+  const getTasksForCustomer = useCallback((customerId: string) =>
+    tasks.filter((t) => t.linkedCustomerId === customerId), [tasks])
+
+  return { tasks, addTask, updateTask, deleteTask, getTasksForLead, getTasksForCustomer }
 }
