@@ -5,6 +5,12 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authHeader = request.headers.get('authorization')
+  const webhookSecret = process.env.WEBHOOK_SECRET
+  if (webhookSecret && authHeader && authHeader !== `Bearer ${webhookSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const { id } = await params
   let body: Record<string, unknown>
   try {

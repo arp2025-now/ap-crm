@@ -31,6 +31,7 @@ const TAB_ICONS: Record<SettingsTab, typeof User> = {
   pipeline: GitBranch,
 };
 
+
 const ROLE_CONFIG: Record<CrmUserRole, { icon: typeof Crown; color: string; bg: string }> = {
   admin: { icon: Crown, color: "text-amber-600", bg: "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-700" },
   manager: { icon: Shield, color: "text-violet-600", bg: "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-700" },
@@ -51,6 +52,13 @@ export default function SettingsPage() {
   const { users, addUser, updateUser, deleteUser, DEFAULT_PERMISSIONS } = useCrmUsers();
   const { stages, addStage, deleteStage } = usePipelineStages();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const TAB_LABELS: Record<SettingsTab, string> = {
+    profile: t('tabProfile'),
+    branding: t('tabBranding'),
+    users: t('tabUsers'),
+    pipeline: t('tabPipeline'),
+  };
 
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const [newStageName, setNewStageName] = useState("");
@@ -143,7 +151,7 @@ export default function SettingsPage() {
               }`}
             >
               <Icon className="h-4 w-4" />
-              {t(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}` as any)}
+              {TAB_LABELS[tab]}
             </button>
           );
         })}
@@ -522,7 +530,7 @@ export default function SettingsPage() {
 
             <section className="space-y-4">
               <div className="space-y-2">
-                {stages.sort((a, b) => a.order - b.order).map((stage) => (
+                {[...stages].sort((a, b) => a.order - b.order).map((stage) => (
                   <div key={stage.id} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 border rounded-lg">
                     <GripVertical className="w-4 h-4 text-gray-300" />
                     <div
