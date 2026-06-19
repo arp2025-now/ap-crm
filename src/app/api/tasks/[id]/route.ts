@@ -3,8 +3,9 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   let body: Record<string, unknown>
   try {
     body = await request.json()
@@ -18,7 +19,7 @@ export async function PATCH(
   const { error } = await supabase
     .from('tasks')
     .update({ completed_at: completed_at ?? null })
-    .eq('id', params.id)
+    .eq('id', id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })

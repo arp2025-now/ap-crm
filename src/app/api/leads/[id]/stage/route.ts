@@ -4,8 +4,9 @@ import { PIPELINE_STAGES, type PipelineStage } from '@/lib/constants'
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   let body: Record<string, unknown>
   try {
     body = await request.json()
@@ -22,7 +23,7 @@ export async function PATCH(
   const { error } = await supabase
     .from('leads')
     .update({ status: stage })
-    .eq('id', params.id)
+    .eq('id', id)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

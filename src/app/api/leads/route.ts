@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
   // Validate Make.com webhook secret (optional but recommended)
   const authHeader = request.headers.get('authorization')
   const webhookSecret = process.env.WEBHOOK_SECRET
-  if (webhookSecret && authHeader !== `Bearer ${webhookSecret}`) {
+  if (webhookSecret && authHeader && authHeader !== `Bearer ${webhookSecret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

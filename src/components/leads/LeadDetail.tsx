@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { LeadTimeline } from './LeadTimeline'
@@ -19,9 +20,9 @@ export function LeadDetail({ lead, meetings, recordings, whatsappLogs, tasks }: 
   return (
     <main className="p-6 max-w-4xl mx-auto">
       <div className="mb-6">
-        <a href="/pipeline" className="text-sm text-gray-500 hover:text-gray-700">
+        <Link href="/pipeline" className="text-sm text-gray-500 hover:text-gray-700">
           ← Pipeline
-        </a>
+        </Link>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">

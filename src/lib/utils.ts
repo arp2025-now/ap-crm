@@ -1,20 +1,44 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
-import { format, formatDistanceToNow } from 'date-fns'
-import { he } from 'date-fns/locale'
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
-export function formatDate(dateStr: string): string {
-  return format(new Date(dateStr), 'dd/MM/yyyy', { locale: he })
+export function formatCurrency(amount: number, locale: string = "he-IL"): string {
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: "ILS",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
 }
 
-export function formatDateTime(dateStr: string): string {
-  return format(new Date(dateStr), 'dd/MM/yyyy HH:mm', { locale: he })
+export function formatDate(date: Date | string, locale: string = "he-IL"): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(d);
 }
 
-export function formatRelative(dateStr: string): string {
-  return formatDistanceToNow(new Date(dateStr), { addSuffix: true, locale: he })
+export function formatDateTime(date: Date | string, locale: string = "he-IL"): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(d);
+}
+
+export function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 }
