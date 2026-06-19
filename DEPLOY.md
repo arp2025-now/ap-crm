@@ -6,6 +6,7 @@ Open your Supabase project → SQL Editor and run these files in order:
 
 1. `supabase/migrations/003_pipeline_stages.sql`
 2. `supabase/migrations/004_tasks_status.sql`
+3. `supabase/migrations/005_custom_fields.sql`
 
 (Migrations 001 and 002 should already be applied from initial setup.)
 
