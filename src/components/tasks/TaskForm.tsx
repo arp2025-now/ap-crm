@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,6 +18,7 @@ interface TaskFormProps {
 
 export function TaskForm({ leadId, clientId, meetingId, onSuccess }: TaskFormProps) {
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -39,6 +41,7 @@ export function TaskForm({ leadId, clientId, meetingId, onSuccess }: TaskFormPro
 
     setLoading(false)
     ;(e.target as HTMLFormElement).reset()
+    router.refresh()
     onSuccess?.()
   }
 

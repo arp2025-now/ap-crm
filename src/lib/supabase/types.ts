@@ -1,10 +1,5 @@
-export type PipelineStage =
-  | 'מתעניין'
-  | 'שיחת היכרות'
-  | 'שיחת אפיון'
-  | 'הצעת מחיר'
-  | 'הצעת מחיר חתומה'
-  | 'לקוח'
+import type { PipelineStage } from '../constants'
+export type { PipelineStage }
 
 export interface Lead {
   id: string

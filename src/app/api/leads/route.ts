@@ -9,8 +9,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const body = await request.json()
-  const { full_name, phone, email, source, notes, status } = body
+  let body: Record<string, unknown>
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+  const { full_name, phone, email, source, notes, status } = body as {
+    full_name?: string
+    phone?: string
+    email?: string
+    source?: string
+    notes?: string
+    status?: string
+  }
 
   if (!full_name) {
     return NextResponse.json({ error: 'full_name is required' }, { status: 400 })

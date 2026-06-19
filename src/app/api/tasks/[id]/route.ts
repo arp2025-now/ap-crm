@@ -5,12 +5,19 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const body = await request.json()
+  let body: Record<string, unknown>
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
+
+  const { completed_at } = body as { completed_at?: string | null }
   const supabase = await createServerSupabaseClient()
 
   const { error } = await supabase
     .from('tasks')
-    .update(body)
+    .update({ completed_at: completed_at ?? null })
     .eq('id', params.id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
