@@ -10,6 +10,9 @@ import { DynamicFieldInput } from "@/components/leads/dynamic-field-input";
 import { isCustomerBuiltIn } from "@/lib/customer-field-definitions";
 import type { Customer } from "@/lib/types";
 import type { FieldDefinition } from "@/lib/field-definitions";
+import { useCustomFieldDefinitions } from "@/hooks/use-custom-field-definitions";
+import { useCustomFieldValues } from "@/hooks/use-custom-field-values";
+import { CustomFieldsSection } from "@/components/custom-fields/custom-fields-section";
 
 type FormState = Record<string, string | number | null>;
 
@@ -32,6 +35,13 @@ export function CustomerFormDialog({
   const t = useTranslations("customers");
   const tc = useTranslations("common");
   const [form, setForm] = useState<FormState>({});
+
+  // Custom fields
+  const { fields: customDefs } = useCustomFieldDefinitions('customer')
+  const { values: cfValues, setValue: setCfValue, saveAll: saveCfAll } = useCustomFieldValues(
+    customer?.id ?? '',
+    'customer'
+  )
 
   useEffect(() => {
     if (open) {
@@ -63,6 +73,11 @@ export function CustomerFormDialog({
     });
 
     onSave({ ...builtIn, customFields: { ...(customer?.customFields ?? {}), ...customFields } });
+    // Save custom field values for existing customers only.
+    // For new customers (no customer?.id), custom fields can be filled after first save.
+    if (customer?.id) {
+      saveCfAll(customDefs).catch(console.error);
+    }
     onOpenChange(false);
   };
 
@@ -87,6 +102,14 @@ export function CustomerFormDialog({
               />
             </div>
           ))}
+
+          {/* Custom fields section */}
+          <CustomFieldsSection
+            entityType="customer"
+            definitions={customDefs}
+            values={cfValues}
+            onChangeValue={setCfValue}
+          />
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{tc("cancel")}</Button>

@@ -11,6 +11,9 @@ import { isBuiltIn } from "@/lib/field-definitions";
 import { formatDate } from "@/lib/utils";
 import type { Lead } from "@/lib/types";
 import type { FieldDefinition } from "@/lib/field-definitions";
+import { useCustomFieldDefinitions } from "@/hooks/use-custom-field-definitions";
+import { useCustomFieldValues } from "@/hooks/use-custom-field-values";
+import { CustomFieldsSection } from "@/components/custom-fields/custom-fields-section";
 
 type FormState = Record<string, string | number | null>;
 
@@ -41,6 +44,13 @@ export function LeadFormDialog({ open, onOpenChange, lead, fields, onSave }: Lea
 
   const [form, setForm] = useState<FormState>({});
 
+  // Custom fields
+  const { fields: customDefs } = useCustomFieldDefinitions('lead')
+  const { values: cfValues, setValue: setCfValue, saveAll: saveCfAll } = useCustomFieldValues(
+    lead?.id ?? '',
+    'lead'
+  )
+
   useEffect(() => {
     if (open) setForm(buildFormState(lead, fields));
   }, [open, lead, fields]);
@@ -63,6 +73,11 @@ export function LeadFormDialog({ open, onOpenChange, lead, fields, onSave }: Lea
     });
 
     onSave(builtIn, customFields);
+    // Save custom field values for existing leads only.
+    // For new leads (no lead?.id), custom fields can be filled after first save.
+    if (lead?.id) {
+      saveCfAll(customDefs).catch(console.error);
+    }
     onOpenChange(false);
   };
 
@@ -89,6 +104,14 @@ export function LeadFormDialog({ open, onOpenChange, lead, fields, onSave }: Lea
               />
             </div>
           ))}
+
+          {/* Custom fields section */}
+          <CustomFieldsSection
+            entityType="lead"
+            definitions={customDefs}
+            values={cfValues}
+            onChangeValue={setCfValue}
+          />
 
           {/* Metadata section — edit mode only */}
           {isEdit && lead && (
