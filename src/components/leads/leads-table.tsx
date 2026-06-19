@@ -186,7 +186,7 @@ export function LeadsTable({
 
                   {show("lastContact") && (
                     <TableCell className="text-sm text-muted-foreground">
-                      {new Date(lead.lastContactAt).toLocaleDateString(fmtLocale)}
+                      {lead.lastContactAt ? new Date(lead.lastContactAt).toLocaleDateString(fmtLocale) : "—"}
                     </TableCell>
                   )}
 

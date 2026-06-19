@@ -87,11 +87,11 @@ export default function LeadDetailPage() {
       id: `cust-${Date.now()}`,
       serialNumber: nextCustomerSerial(),
       name: lead.customerName,
-      phone: lead.phone,
-      email: lead.customerEmail,
+      phone: lead.phone ?? "",
+      email: lead.customerEmail ?? "",
       company: lead.company ?? "",
       industry: "",
-      assignedAgentId: lead.assignedAgentId,
+      assignedAgentId: lead.assignedAgentId ?? "",
       tags: [],
       sentimentScore: 0,
       lifetimeValue: signedQuoteTotal || lead.pipelineValue,
@@ -206,7 +206,7 @@ export default function LeadDetailPage() {
               <span className="text-xs text-muted-foreground">{linkedQuotes.length} {locale === "he" ? "הצעות מחיר" : "quotes"}</span>
             </div>
           )}
-          <p className="text-xs text-muted-foreground mt-1">{t("lastContact")}: {formatDate(lead.lastContactAt, fmtLocale)}</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("lastContact")}: {lead.lastContactAt ? formatDate(lead.lastContactAt, fmtLocale) : "—"}</p>
         </div>
 
         <div className="rounded-2xl border bg-card p-5 shadow-sm">

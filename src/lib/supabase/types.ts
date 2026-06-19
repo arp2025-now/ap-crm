@@ -1,49 +1,73 @@
-import type { PipelineStage } from '../constants'
-export type { PipelineStage }
+export type Json = string | number | boolean | null | { [key: string]: Json } | Json[]
 
-export interface Lead {
+export type DbLead = {
   id: string
   full_name: string
   phone: string | null
   email: string | null
   source: string | null
-  status: PipelineStage
+  status: string
   ai_score: number | null
   notes: string | null
+  company: string | null
+  heat_level: string | null
+  pipeline_value: number | null
   created_at: string
   updated_at: string
 }
 
-export interface Client {
+export type DbClient = {
   id: string
   lead_id: string | null
   full_name: string
   phone: string | null
   email: string | null
   company: string | null
+  industry: string | null
+  assigned_agent_id: string | null
+  tags: string[] | null
+  sentiment_score: number | null
+  lifetime_value: number | null
+  health_grade: string | null
+  lifecycle_stage: string | null
   created_at: string
 }
 
-export interface Meeting {
+export type DbTask = {
+  id: string
+  title: string
+  details: string | null
+  due_at: string | null
+  completed_at: string | null
+  assigned_to: string | null
+  priority: string
+  lead_id: string | null
+  client_id: string | null
+  meeting_id: string | null
+  project_id: string | null
+  created_at: string
+}
+
+export type DbMeeting = {
   id: string
   lead_id: string | null
   client_id: string | null
-  type: 'היכרות' | 'אפיון' | 'פולואפ' | 'אחר'
+  type: string
   scheduled_at: string
   duration_min: number | null
-  status: 'מתוכננת' | 'התקיימה' | 'בוטלה'
-  google_event_id: string | null
+  status: string
   meet_link: string | null
   location: string | null
+  google_event_id: string | null
   created_at: string
 }
 
-export interface Recording {
+export type DbRecording = {
   id: string
   meeting_id: string | null
   lead_id: string | null
   client_id: string | null
-  source: 'fathom' | 'fireflies'
+  source: string
   external_id: string | null
   external_link: string | null
   title: string | null
@@ -56,83 +80,29 @@ export interface Recording {
   created_at: string
 }
 
-export interface Task {
-  id: string
-  title: string
-  details: string | null
-  due_at: string | null
-  completed_at: string | null
-  assigned_to: string | null
-  priority: 'גבוה' | 'בינוני' | 'נמוך'
-  lead_id: string | null
-  client_id: string | null
-  meeting_id: string | null
-  project_id: string | null
-  created_at: string
-}
-
-export interface WhatsappLog {
+export type DbWhatsappLog = {
   id: string
   lead_id: string | null
   client_id: string | null
   phone: string
-  direction: 'in' | 'out'
+  direction: string
   message: string
-  source: 'bot' | 'manual'
   sent_at: string
+  source: string
 }
 
-export interface Partnership {
+export type DbPipelineStage = {
   id: string
-  full_name: string
-  phone: string | null
-  email: string | null
-  type: string | null
-  notes: string | null
+  name: string
+  position: number
+  color: string | null
   created_at: string
 }
 
-export type Database = {
-  public: {
-    Tables: {
-      leads: {
-        Row: Lead
-        Insert: Omit<Lead, 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Omit<Lead, 'id' | 'created_at' | 'updated_at'>>
-      }
-      clients: {
-        Row: Client
-        Insert: Omit<Client, 'id' | 'created_at'>
-        Update: Partial<Omit<Client, 'id' | 'created_at'>>
-      }
-      meetings: {
-        Row: Meeting
-        Insert: Omit<Meeting, 'id' | 'created_at'>
-        Update: Partial<Omit<Meeting, 'id' | 'created_at'>>
-      }
-      recordings: {
-        Row: Recording
-        Insert: Omit<Recording, 'id' | 'created_at'>
-        Update: Partial<Omit<Recording, 'id' | 'created_at'>>
-      }
-      tasks: {
-        Row: Task
-        Insert: Omit<Task, 'id' | 'created_at'>
-        Update: Partial<Omit<Task, 'id' | 'created_at'>>
-      }
-      whatsapp_logs: {
-        Row: WhatsappLog
-        Insert: Omit<WhatsappLog, 'id' | 'sent_at'>
-        Update: Partial<Omit<WhatsappLog, 'id' | 'sent_at'>>
-      }
-      partnerships: {
-        Row: Partnership
-        Insert: Omit<Partnership, 'id' | 'created_at'>
-        Update: Partial<Omit<Partnership, 'id' | 'created_at'>>
-      }
-    }
-    Views: {}
-    Functions: {}
-    Enums: {}
-  }
-}
+// Backward-compat aliases — existing imports continue to work
+// while migrations to Db* names happen incrementally in later tasks.
+export type Lead = DbLead
+export type Meeting = DbMeeting
+export type Recording = DbRecording
+export type Task = DbTask
+export type WhatsappLog = DbWhatsappLog

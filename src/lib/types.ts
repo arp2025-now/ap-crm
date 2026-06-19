@@ -44,39 +44,34 @@ export interface Customer {
 }
 
 export interface Lead {
-  // Auto metadata
-  id: string;
-  serialNumber: number;
-  customerId: string;
-  assignedAgentId: string;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
-  updatedBy: string;
-  lastContactAt: string;
-
-  // System fields (always present)
-  customerName: string;
-  phone: string;
-  customerEmail: string;
-  status: LeadStatus;
-
-  // Built-in custom fields (top-level for backward compat)
-  company?: string;
-  heatLevel: HeatLevel;
-  pipelineValue: number;
-  notes?: string;
-
-  // User-defined custom fields
-  customFields: Record<string, string | number | null>;
+  id: string
+  serialNumber?: number
+  customerName: string        // maps to DB: full_name
+  customerEmail?: string      // maps to DB: email
+  phone?: string
+  company?: string
+  status: string              // pipeline stage name (e.g., "מתעניין")
+  source?: string
+  heatLevel: HeatLevel        // maps to DB: heat_level
+  pipelineValue: number       // maps to DB: pipeline_value
+  aiScore?: number            // maps to DB: ai_score
+  notes?: string
+  assignedAgentId?: string
+  createdAt: string
+  updatedAt: string
+  createdBy?: string
+  updatedBy?: string
+  lastContactAt?: string
+  customerId?: string
+  customFields?: Record<string, string | number | null>
 }
 
 export interface PipelineStage {
-  id: string;
-  name: string;
-  nameHe: string;
-  color: string;
-  order: number;
+  id: string
+  name: string
+  nameHe?: string   // optional alias kept for backward compat
+  color: string
+  order: number     // maps to DB: position
 }
 
 export interface Document {
