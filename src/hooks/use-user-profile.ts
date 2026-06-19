@@ -8,7 +8,7 @@ const STORAGE_KEY = "crm-user-profile";
 const DEFAULT_PROFILE: UserProfile = {
   fullName: "ענת",
   phone: "",
-  email: "anat.ugc@gmail.com",
+  email: "",
   companyName: "AP Automations",
   companyId: "",
   address: "",

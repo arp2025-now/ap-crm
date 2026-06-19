@@ -5,13 +5,25 @@ import type { Task, TaskStatus, TaskPriority } from '@/lib/types'
 import type { DbTask } from '@/lib/supabase/types'
 import { createClient } from '@/lib/supabase/client'
 
+const PRIORITY_TO_DB: Record<string, string> = {
+  low: 'נמוך',
+  medium: 'בינוני',
+  high: 'גבוה',
+}
+
+const PRIORITY_FROM_DB: Record<string, string> = {
+  'נמוך': 'low',
+  'בינוני': 'medium',
+  'גבוה': 'high',
+}
+
 function dbToTask(row: DbTask): Task {
   return {
     id: row.id,
     title: row.title,
     description: row.details ?? '',
     status: (row.status as TaskStatus) ?? 'todo',
-    priority: (row.priority as TaskPriority) ?? 'medium',
+    priority: (PRIORITY_FROM_DB[row.priority ?? ''] ?? 'medium') as TaskPriority,
     dueDate: row.due_at?.split('T')[0],
     linkedLeadId: row.lead_id ?? undefined,
     linkedCustomerId: row.client_id ?? undefined,
@@ -50,7 +62,7 @@ export function useTasks() {
       .insert({
         title: data.title,
         details: data.description ?? null,
-        priority: data.priority ?? 'medium',
+        priority: PRIORITY_TO_DB[data.priority ?? 'medium'] ?? 'בינוני',
         status: 'todo',
         due_at: data.dueDate ? `${data.dueDate}T00:00:00Z` : null,
         lead_id: data.linkedLeadId ?? null,
@@ -68,7 +80,7 @@ export function useTasks() {
     const updates: Partial<DbTask> = {}
     if (data.title !== undefined) updates.title = data.title
     if (data.description !== undefined) updates.details = data.description
-    if (data.priority !== undefined) updates.priority = data.priority
+    if (data.priority !== undefined) updates.priority = PRIORITY_TO_DB[data.priority] ?? 'בינוני'
     if (data.dueDate !== undefined) updates.due_at = data.dueDate ? `${data.dueDate}T00:00:00Z` : null
     if (data.status !== undefined) {
       updates.status = data.status
