@@ -20,6 +20,9 @@ import { useQuotes } from "@/hooks/use-quotes";
 import { useTasks } from "@/hooks/use-tasks";
 import { useForms } from "@/hooks/use-forms";
 import { useAutomations } from "@/hooks/use-automations";
+import { useCustomFieldDefinitions } from "@/hooks/use-custom-field-definitions";
+import { useCustomFieldValues } from "@/hooks/use-custom-field-values";
+import { CustomFieldsSection } from "@/components/custom-fields/custom-fields-section";
 import { formatCurrency } from "@/lib/utils";
 import type { Quote, Task } from "@/lib/types";
 
@@ -32,6 +35,8 @@ export default function CustomerProfilePage() {
   const fmtLocale = locale === "he" ? "he-IL" : "en-US";
   const router = useRouter();
   const { customers, updateCustomer } = useCustomers();
+  const { fields: customDefs } = useCustomFieldDefinitions('customer');
+  const { values: cfValues, setValue: setCfValue, saveAll: saveCfAll } = useCustomFieldValues(id, 'customer');
   const { leads } = useLeads();
   const { quotes, addQuote, nextSerial } = useQuotes();
   const { getTasksForCustomer, addTask, updateTask, deleteTask } = useTasks();
@@ -115,6 +120,21 @@ export default function CustomerProfilePage() {
       <CustomerHeader customer={customer} />
 
       <MetricCards customer={customer} locale={locale} lifetimeValue={computedLifetimeValue} closeTimeDays={closeTimeDays} />
+
+      {/* ── Custom Fields ── */}
+      {customDefs.length > 0 && (
+        <div className="rounded-xl border bg-card p-5">
+          <CustomFieldsSection
+            entityType="customer"
+            definitions={customDefs}
+            values={cfValues}
+            onChangeValue={(key, val) => {
+              setCfValue(key, val);
+              saveCfAll(customDefs).catch(console.error);
+            }}
+          />
+        </div>
+      )}
 
       <div className="rounded-xl border bg-card p-5">
         <div className="flex items-center justify-between mb-4">

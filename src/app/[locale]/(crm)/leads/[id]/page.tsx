@@ -23,6 +23,9 @@ import { useFieldDefinitions } from "@/hooks/use-field-definitions";
 import { useAutomations } from "@/hooks/use-automations";
 import { useMeetings } from "@/hooks/use-meetings";
 import { useRecordings } from "@/hooks/use-recordings";
+import { useCustomFieldDefinitions } from "@/hooks/use-custom-field-definitions";
+import { useCustomFieldValues } from "@/hooks/use-custom-field-values";
+import { CustomFieldsSection } from "@/components/custom-fields/custom-fields-section";
 import { getInitials, formatCurrency, formatDate } from "@/lib/utils";
 import type { HeatLevel, Customer } from "@/lib/types";
 
@@ -48,6 +51,8 @@ export default function LeadDetailPage() {
   const { fields } = useFieldDefinitions();
   const { automations } = useAutomations();
   const { meetings } = useMeetings(id);
+  const { fields: customDefs } = useCustomFieldDefinitions('lead');
+  const { values: cfValues, setValue: setCfValue, saveAll: saveCfAll } = useCustomFieldValues(id, 'lead');
   const { recordings } = useRecordings(id);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const router = useRouter();
@@ -252,6 +257,21 @@ export default function LeadDetailPage() {
           className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/50"
         />
       </div>
+
+      {/* ── Custom Fields ── */}
+      {customDefs.length > 0 && (
+        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-3">
+          <CustomFieldsSection
+            entityType="lead"
+            definitions={customDefs}
+            values={cfValues}
+            onChangeValue={(key, val) => {
+              setCfValue(key, val);
+              saveCfAll(customDefs).catch(console.error);
+            }}
+          />
+        </div>
+      )}
 
       {/* ── Tasks ── */}
       <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4">
