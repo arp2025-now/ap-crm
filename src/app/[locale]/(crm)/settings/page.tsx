@@ -6,8 +6,10 @@ import {
   Upload, Trash2, RotateCcw, Settings, Palette, Building2, Image,
   User, Users, Shield, Mail, Phone, Globe, MapPin, Hash, Plus,
   Pencil, CheckCircle2, XCircle, Crown, Eye, UserCheck, Sparkles,
-  GripVertical, GitBranch,
+  GripVertical, GitBranch, SlidersHorizontal,
 } from "lucide-react";
+import { useCustomFieldDefinitions, NewFieldInput } from "@/hooks/use-custom-field-definitions";
+import { EntityType, FieldType } from "@/lib/custom-fields/types";
 import { useBranding } from "@/hooks/use-branding";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { useCrmUsers } from "@/hooks/use-crm-users";
@@ -21,7 +23,7 @@ import {
 import { getInitials } from "@/lib/utils";
 import type { CrmUser, CrmUserRole, PermissionLevel } from "@/lib/types";
 
-const TABS = ["profile", "branding", "users", "pipeline"] as const;
+const TABS = ["profile", "branding", "users", "pipeline", "custom_fields"] as const;
 type SettingsTab = typeof TABS[number];
 
 const TAB_ICONS: Record<SettingsTab, typeof User> = {
@@ -29,6 +31,7 @@ const TAB_ICONS: Record<SettingsTab, typeof User> = {
   branding: Palette,
   users: Users,
   pipeline: GitBranch,
+  custom_fields: SlidersHorizontal,
 };
 
 
@@ -58,6 +61,7 @@ export default function SettingsPage() {
     branding: t('tabBranding'),
     users: t('tabUsers'),
     pipeline: t('tabPipeline'),
+    custom_fields: 'שדות מותאמים',
   };
 
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
@@ -68,6 +72,21 @@ export default function SettingsPage() {
   const [formEmail, setFormEmail] = useState("");
   const [formRole, setFormRole] = useState<CrmUserRole>("agent");
   const [profileSaved, setProfileSaved] = useState(false);
+
+  // Custom fields tab state
+  const [cfEntityType, setCfEntityType] = useState<EntityType>('lead');
+  const [addFieldOpen, setAddFieldOpen] = useState(false);
+  const [newFieldName, setNewFieldName] = useState('');
+  const [newFieldType, setNewFieldType] = useState<FieldType>('text');
+  const [newFieldChoices, setNewFieldChoices] = useState('');
+  const [newFieldRequired, setNewFieldRequired] = useState(false);
+
+  const {
+    fields: customFields,
+    loading: cfLoading,
+    addField,
+    deleteField,
+  } = useCustomFieldDefinitions(cfEntityType);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -565,6 +584,170 @@ export default function SettingsPage() {
                 </button>
               </div>
             </section>
+          </div>
+        </div>
+      )}
+
+      {/* ── Custom Fields Tab ── */}
+      {activeTab === 'custom_fields' && (
+        <div className="max-w-2xl">
+          <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-purple-500/15 flex items-center justify-center">
+                <SlidersHorizontal className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold">שדות מותאמים</h2>
+                <p className="text-xs text-muted-foreground">הגדרת שדות נוספים לכל סוג ישות</p>
+              </div>
+            </div>
+
+            {/* Entity selector */}
+            <div className="flex gap-2 flex-wrap">
+              {([
+                ['lead', 'לידים'],
+                ['customer', 'לקוחות'],
+                ['task', 'משימות'],
+                ['meeting', 'פגישות'],
+                ['recording', 'הקלטות'],
+                ['whatsapp', 'WhatsApp'],
+              ] as [EntityType, string][]).map(([type, label]) => (
+                <button
+                  key={type}
+                  onClick={() => { setCfEntityType(type); setAddFieldOpen(false); }}
+                  className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                    cfEntityType === type
+                      ? 'bg-indigo-600 text-white border-indigo-600'
+                      : 'bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-indigo-400'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Field list */}
+            <div className="space-y-2">
+              {cfLoading ? (
+                <p className="text-sm text-muted-foreground">טוען...</p>
+              ) : customFields.length === 0 ? (
+                <p className="text-sm text-muted-foreground">אין שדות מותאמים עדיין</p>
+              ) : (
+                customFields.map(field => (
+                  <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-white dark:bg-slate-900">
+                    <div className="flex items-center gap-3">
+                      <GripVertical className="w-4 h-4 text-gray-300" />
+                      <div>
+                        <p className="text-sm font-medium">{field.name}</p>
+                        <p className="text-xs text-muted-foreground">{field.fieldType}{field.isRequired ? ' · חובה' : ''}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => deleteField(field.id)}
+                      className="text-red-400 hover:text-red-600 p-1 rounded transition-colors"
+                      aria-label="מחק שדה"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Add field */}
+            {!addFieldOpen ? (
+              <button
+                onClick={() => setAddFieldOpen(true)}
+                className="flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+              >
+                <Plus className="w-4 h-4" />
+                הוסף שדה
+              </button>
+            ) : (
+              <div className="border rounded-lg p-4 space-y-3 bg-gray-50 dark:bg-slate-800/50">
+                <p className="text-sm font-medium">שדה חדש</p>
+                <input
+                  type="text"
+                  placeholder="שם השדה"
+                  value={newFieldName}
+                  onChange={e => setNewFieldName(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                  dir="rtl"
+                  autoFocus
+                />
+                <select
+                  value={newFieldType}
+                  onChange={e => setNewFieldType(e.target.value as FieldType)}
+                  className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                >
+                  <option value="text">טקסט</option>
+                  <option value="number">מספר</option>
+                  <option value="date">תאריך</option>
+                  <option value="checkbox">תיבת סימון</option>
+                  <option value="dropdown">רשימת בחירה</option>
+                  <option value="multi_select">בחירה מרובה</option>
+                  <option value="phone">טלפון</option>
+                  <option value="url">קישור</option>
+                  <option value="file">קובץ</option>
+                </select>
+                {(newFieldType === 'dropdown' || newFieldType === 'multi_select') && (
+                  <input
+                    type="text"
+                    placeholder="אפשרויות — מופרדות בפסיק (אדום, כחול, ירוק)"
+                    value={newFieldChoices}
+                    onChange={e => setNewFieldChoices(e.target.value)}
+                    className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                    dir="rtl"
+                  />
+                )}
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newFieldRequired}
+                    onChange={e => setNewFieldRequired(e.target.checked)}
+                    className="rounded"
+                  />
+                  שדה חובה
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      if (!newFieldName.trim()) return;
+                      const input: NewFieldInput = {
+                        name: newFieldName.trim(),
+                        fieldType: newFieldType,
+                        isRequired: newFieldRequired,
+                        options: (newFieldType === 'dropdown' || newFieldType === 'multi_select')
+                          ? { choices: newFieldChoices.split(',').map(s => s.trim()).filter(Boolean) }
+                          : {},
+                      };
+                      await addField(input);
+                      setNewFieldName('');
+                      setNewFieldType('text');
+                      setNewFieldChoices('');
+                      setNewFieldRequired(false);
+                      setAddFieldOpen(false);
+                    }}
+                    disabled={!newFieldName.trim()}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    שמור
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAddFieldOpen(false);
+                      setNewFieldName('');
+                      setNewFieldType('text');
+                      setNewFieldChoices('');
+                      setNewFieldRequired(false);
+                    }}
+                    className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-slate-700"
+                  >
+                    ביטול
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
