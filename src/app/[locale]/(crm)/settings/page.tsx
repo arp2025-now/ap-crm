@@ -81,10 +81,17 @@ export default function SettingsPage() {
   const [newFieldChoices, setNewFieldChoices] = useState('');
   const [newFieldRequired, setNewFieldRequired] = useState(false);
 
+  // Editing state for custom fields
+  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+  const [editFieldName, setEditFieldName] = useState('');
+  const [editFieldType, setEditFieldType] = useState<FieldType>('text');
+  const [editFieldRequired, setEditFieldRequired] = useState(false);
+
   const {
     fields: customFields,
     loading: cfLoading,
     addField,
+    updateField,
     deleteField,
   } = useCustomFieldDefinitions(cfEntityType);
 
@@ -614,7 +621,7 @@ export default function SettingsPage() {
               ] as [EntityType, string][]).map(([type, label]) => (
                 <button
                   key={type}
-                  onClick={() => { setCfEntityType(type); setAddFieldOpen(false); }}
+                  onClick={() => { setCfEntityType(type); setAddFieldOpen(false); setEditingFieldId(null); }}
                   className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
                     cfEntityType === type
                       ? 'bg-indigo-600 text-white border-indigo-600'
@@ -634,21 +641,104 @@ export default function SettingsPage() {
                 <p className="text-sm text-muted-foreground">אין שדות מותאמים עדיין</p>
               ) : (
                 customFields.map(field => (
-                  <div key={field.id} className="flex items-center justify-between p-3 border rounded-lg bg-white dark:bg-slate-900">
-                    <div className="flex items-center gap-3">
-                      <GripVertical className="w-4 h-4 text-gray-300" />
-                      <div>
-                        <p className="text-sm font-medium">{field.name}</p>
-                        <p className="text-xs text-muted-foreground">{field.fieldType}{field.isRequired ? ' · חובה' : ''}</p>
+                  <div key={field.id} className="border rounded-lg bg-white dark:bg-slate-900 overflow-hidden">
+                    {editingFieldId === field.id ? (
+                      /* ── Inline edit form ── */
+                      <div className="p-4 space-y-3 bg-gray-50 dark:bg-slate-800/50">
+                        <p className="text-sm font-medium">עריכת שדה</p>
+                        <input
+                          type="text"
+                          value={editFieldName}
+                          onChange={e => setEditFieldName(e.target.value)}
+                          className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                          dir="rtl"
+                          autoFocus
+                        />
+                        <select
+                          value={editFieldType}
+                          onChange={e => setEditFieldType(e.target.value as FieldType)}
+                          className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                        >
+                          <option value="text">טקסט</option>
+                          <option value="number">מספר</option>
+                          <option value="date">תאריך</option>
+                          <option value="checkbox">תיבת סימון</option>
+                          <option value="dropdown">רשימת בחירה</option>
+                          <option value="multi_select">בחירה מרובה</option>
+                          <option value="phone">טלפון</option>
+                          <option value="url">קישור</option>
+                          <option value="file">קובץ</option>
+                        </select>
+                        <label className="flex items-center gap-2 text-sm cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={editFieldRequired}
+                            onChange={e => setEditFieldRequired(e.target.checked)}
+                            className="rounded"
+                          />
+                          שדה חובה
+                        </label>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={async () => {
+                              if (!editFieldName.trim()) return;
+                              await updateField(field.id, {
+                                name: editFieldName.trim(),
+                                fieldType: editFieldType,
+                                isRequired: editFieldRequired,
+                              });
+                              setEditingFieldId(null);
+                            }}
+                            disabled={!editFieldName.trim()}
+                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            שמור
+                          </button>
+                          <button
+                            onClick={() => setEditingFieldId(null)}
+                            className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-slate-700"
+                          >
+                            ביטול
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                    <button
-                      onClick={() => deleteField(field.id)}
-                      className="text-red-400 hover:text-red-600 p-1 rounded transition-colors"
-                      aria-label="מחק שדה"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    ) : (
+                      /* ── Normal row ── */
+                      <div className="flex items-center justify-between p-3">
+                        <div className="flex items-center gap-3">
+                          <GripVertical className="w-4 h-4 text-gray-300" />
+                          <div>
+                            <p className="text-sm font-medium">{field.name}</p>
+                            <p className="text-xs text-muted-foreground">{field.fieldType}{field.isRequired ? ' · חובה' : ''}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              setEditingFieldId(field.id);
+                              setEditFieldName(field.name);
+                              setEditFieldType(field.fieldType);
+                              setEditFieldRequired(field.isRequired);
+                            }}
+                            className="text-gray-400 hover:text-indigo-600 p-1 rounded transition-colors"
+                            aria-label="ערוך שדה"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (window.confirm('למחוק שדה זה?')) {
+                                await deleteField(field.id);
+                              }
+                            }}
+                            className="text-red-400 hover:text-red-600 p-1 rounded transition-colors"
+                            aria-label="מחק שדה"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))
               )}
