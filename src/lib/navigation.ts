@@ -2,6 +2,7 @@ import {
   LayoutDashboard, Users, UserCheck,
   Wallet, BarChart3, HelpCircle, MessageSquare, Package, FileText,
   Settings, Zap, CheckSquare, CalendarDays, ClipboardList, ScrollText,
+  MessageCircle,
 } from "lucide-react";
 
 export const mainNavItems = [
@@ -16,6 +17,7 @@ export const mainNavItems = [
   { key: "forms", href: "/forms", icon: ClipboardList },
   { key: "automations", href: "/automations", icon: Zap },
   { key: "analytics", href: "/analytics", icon: BarChart3 },
+  { key: "whatsapp", href: "/whatsapp", icon: MessageCircle },
 ] as const;
 
 export const bottomNavItems = [

@@ -565,6 +565,22 @@ export interface Recording {
   recordedAt: string
 }
 
+// ── WhatsApp ──
+
+export type WhatsappDirection = 'in' | 'out'
+export type WhatsappSource = 'bot' | 'manual'
+
+export interface WhatsappLog {
+  id: string
+  leadId?: string
+  clientId?: string
+  phone: string
+  direction: WhatsappDirection
+  message: string
+  sentAt: string
+  source: WhatsappSource
+}
+
 // ── Activity Logs ──
 
 export type LogAction = "create" | "update" | "delete" | "convert" | "status_change" | "send" | "import" | "export";
