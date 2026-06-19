@@ -7,6 +7,7 @@ import Link from "next/link";
 import {
   ArrowRight, Mail, Phone, Building2, Flame, Thermometer, Snowflake,
   CheckSquare, Plus, TrendingUp, User, UserCheck, FileText, ClipboardList, Zap, StickyNote,
+  CalendarDays, Video,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,8 @@ import { useTasks } from "@/hooks/use-tasks";
 import { useForms } from "@/hooks/use-forms";
 import { useFieldDefinitions } from "@/hooks/use-field-definitions";
 import { useAutomations } from "@/hooks/use-automations";
+import { useMeetings } from "@/hooks/use-meetings";
+import { useRecordings } from "@/hooks/use-recordings";
 import { getInitials, formatCurrency, formatDate } from "@/lib/utils";
 import type { HeatLevel, Customer } from "@/lib/types";
 
@@ -44,6 +47,8 @@ export default function LeadDetailPage() {
   const { forms } = useForms();
   const { fields } = useFieldDefinitions();
   const { automations } = useAutomations();
+  const { meetings } = useMeetings(id);
+  const { recordings } = useRecordings(id);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const router = useRouter();
 
@@ -367,6 +372,60 @@ export default function LeadDetailPage() {
           </div>
         );
       })()}
+
+      {/* ── Meetings & Recordings ── */}
+      {(meetings.length > 0 || recordings.length > 0) && (
+        <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-xl bg-purple-500/15 flex items-center justify-center">
+              <CalendarDays className="h-4 w-4 text-purple-600" />
+            </div>
+            <h3 className="text-lg font-bold">פגישות והקלטות</h3>
+          </div>
+          <div className="space-y-3">
+            {meetings.map((m) => (
+              <div key={m.id} className="border rounded-lg p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className="font-medium text-sm">{m.type}</span>
+                    <p className="text-xs text-gray-500 mt-1">{new Date(m.scheduledAt).toLocaleDateString('he-IL')}</p>
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${m.status === 'completed' ? 'bg-green-100 text-green-700' : m.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {m.status === 'completed' ? 'התקיימה' : m.status === 'cancelled' ? 'בוטלה' : 'מתוכננת'}
+                  </span>
+                </div>
+                {m.meetLink && (
+                  <a href={m.meetLink} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline mt-2 inline-block">
+                    קישור לפגישה →
+                  </a>
+                )}
+              </div>
+            ))}
+            {recordings.map((r) => (
+              <div key={r.id} className="border rounded-lg p-4 space-y-2">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-2">
+                    <Video className="h-4 w-4 text-purple-500" />
+                    <span className="font-medium text-sm">{r.title ?? 'הקלטה'}</span>
+                  </div>
+                  <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">{r.source}</span>
+                </div>
+                {r.summary && <p className="text-sm text-gray-700">{r.summary}</p>}
+                {r.actionItems && (
+                  <div className="bg-yellow-50 rounded p-2 text-xs text-gray-700">
+                    <strong>Action items:</strong> {r.actionItems}
+                  </div>
+                )}
+                {r.externalLink && (
+                  <a href={r.externalLink} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline">
+                    צפייה בהקלטה →
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Interactions ── */}
       <InteractionLog entityType="lead" entityId={id} locale={locale} />

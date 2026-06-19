@@ -529,6 +529,42 @@ export interface Automation {
   updatedAt: string;
 }
 
+// ── Meetings & Recordings ──
+
+export type MeetingStatus = 'scheduled' | 'completed' | 'cancelled'
+export type MeetingType = 'היכרות' | 'אפיון' | 'פולואפ' | 'אחר'
+
+export interface Meeting {
+  id: string
+  leadId?: string
+  clientId?: string
+  type: MeetingType | string
+  scheduledAt: string
+  durationMin?: number
+  status: MeetingStatus
+  meetLink?: string
+  location?: string
+  googleEventId?: string
+  createdAt: string
+}
+
+export interface Recording {
+  id: string
+  meetingId?: string
+  leadId?: string
+  clientId?: string
+  source: 'fathom' | 'fireflies' | string
+  externalId?: string
+  externalLink?: string
+  title?: string
+  summary?: string
+  transcript?: string
+  actionItems?: string
+  participants?: string
+  durationMin?: number
+  recordedAt: string
+}
+
 // ── Activity Logs ──
 
 export type LogAction = "create" | "update" | "delete" | "convert" | "status_change" | "send" | "import" | "export";
