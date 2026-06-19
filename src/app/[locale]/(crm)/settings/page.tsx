@@ -667,7 +667,6 @@ export default function SettingsPage() {
                           <option value="multi_select">בחירה מרובה</option>
                           <option value="phone">טלפון</option>
                           <option value="url">קישור</option>
-                          <option value="file">קובץ</option>
                         </select>
                         <label className="flex items-center gap-2 text-sm cursor-pointer">
                           <input
@@ -778,7 +777,6 @@ export default function SettingsPage() {
                   <option value="multi_select">בחירה מרובה</option>
                   <option value="phone">טלפון</option>
                   <option value="url">קישור</option>
-                  <option value="file">קובץ</option>
                 </select>
                 {(newFieldType === 'dropdown' || newFieldType === 'multi_select') && (
                   <input

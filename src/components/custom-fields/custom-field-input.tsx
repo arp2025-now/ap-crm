@@ -124,19 +124,5 @@ export function CustomFieldInput({ field, value, onChange }: Props) {
     )
   }
 
-  if (fieldType === 'file') {
-    return (
-      <Input
-        type="file"
-        accept={options.accept ?? '*/*'}
-        onChange={e => {
-          const file = e.target.files?.[0]
-          if (file) onChange(file.name)
-        }}
-        required={isRequired}
-      />
-    )
-  }
-
   return null
 }

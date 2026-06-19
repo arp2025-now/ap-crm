@@ -7,7 +7,6 @@ export type FieldType =
   | 'multi_select'
   | 'phone'
   | 'url'
-  | 'file'
 
 export type EntityType =
   | 'lead'
@@ -19,8 +18,6 @@ export type EntityType =
 
 export interface FieldOptions {
   choices?: string[]       // for dropdown + multi_select
-  accept?: string          // for file, e.g. "image/*"
-  maxSizeMb?: number       // for file
 }
 
 export interface CustomFieldDefinition {
@@ -69,11 +66,20 @@ export interface DbCustomFieldValue {
 
 // Utility: generate field_key from Hebrew/English name
 export function nameToFieldKey(name: string): string {
-  return name
+  let slug = name
     .toLowerCase()
-    .replace(/[\s֐-׿]+/g, '_')  // spaces and Hebrew chars → _
+    .replace(/[\s֐-׿יִ-ﭏ]+/g, '_')  // Hebrew range → underscore
     .replace(/[^a-z0-9_]/g, '')
     .replace(/_{2,}/g, '_')
     .replace(/^_|_$/g, '')
-    || `field_${Date.now()}`
+
+  if (!slug) {
+    // Deterministic fallback: djb2 hash of original name
+    let hash = 5381
+    for (let i = 0; i < name.length; i++) {
+      hash = (hash * 33) ^ name.charCodeAt(i)
+    }
+    slug = `field_${Math.abs(hash).toString(36)}`
+  }
+  return slug
 }

@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS custom_field_definitions (
   field_key text NOT NULL,
   field_type text NOT NULL CHECK (field_type IN (
     'text', 'number', 'date', 'checkbox', 'dropdown',
-    'multi_select', 'phone', 'url', 'file'
+    'multi_select', 'phone', 'url'
   )),
   options jsonb NOT NULL DEFAULT '{}',
   position integer NOT NULL DEFAULT 0,
