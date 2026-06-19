@@ -116,6 +116,14 @@ export default function LeadDetailPage() {
 
   return (
     <div className="space-y-6 pb-10">
+      <Link
+        href={`/${locale}/leads`}
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ArrowRight className="h-4 w-4" />
+        חזרה לרשימת לידים
+      </Link>
+
       {/* ── Hero Header ── */}
       <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-blue-700 p-6 text-white shadow-xl">
         <div className="absolute -top-10 -end-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
@@ -429,15 +437,6 @@ export default function LeadDetailPage() {
 
       {/* ── Interactions ── */}
       <InteractionLog entityType="lead" entityId={id} locale={locale} />
-
-      {/* ── Back Link ── */}
-      <Link
-        href={`/${locale}/leads`}
-        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
-      >
-        <ArrowRight className="h-4 w-4" />
-        חזרה לרשימת לידים
-      </Link>
 
       <TaskDialog
         open={taskDialogOpen}

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
-import { FileText, Plus, CheckSquare, ClipboardList, Zap } from "lucide-react";
+import { FileText, Plus, CheckSquare, ClipboardList, Zap, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CustomerHeader } from "@/components/customers/customer-header";
@@ -105,6 +105,13 @@ export default function CustomerProfilePage() {
 
   return (
     <div className="space-y-6">
+      <Link
+        href={`/${locale}/customers`}
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+      >
+        <ArrowRight className="h-4 w-4" />
+        חזרה ללקוחות
+      </Link>
       <CustomerHeader customer={customer} />
 
       <MetricCards customer={customer} locale={locale} lifetimeValue={computedLifetimeValue} closeTimeDays={closeTimeDays} />
