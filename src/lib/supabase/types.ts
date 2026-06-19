@@ -39,6 +39,7 @@ export type DbTask = {
   details: string | null
   due_at: string | null
   completed_at: string | null
+  status: string
   assigned_to: string | null
   priority: string
   lead_id: string | null
@@ -46,6 +47,7 @@ export type DbTask = {
   meeting_id: string | null
   project_id: string | null
   created_at: string
+  updated_at: string | null
 }
 
 export type DbMeeting = {

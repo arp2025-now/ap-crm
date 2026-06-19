@@ -10,14 +10,14 @@ function dbToTask(row: DbTask): Task {
     id: row.id,
     title: row.title,
     description: row.details ?? '',
-    status: row.completed_at ? 'done' : 'todo',
+    status: (row.status as TaskStatus) ?? 'todo',
     priority: (row.priority as TaskPriority) ?? 'medium',
     dueDate: row.due_at?.split('T')[0],
     linkedLeadId: row.lead_id ?? undefined,
     linkedCustomerId: row.client_id ?? undefined,
     createdAt: row.created_at,
-    updatedAt: row.created_at,
-    createdBy: row.assigned_to ?? '',
+    updatedAt: row.updated_at ?? row.created_at,
+    createdBy: row.assigned_to ?? 'ענת',
   }
 }
 
@@ -51,6 +51,7 @@ export function useTasks() {
         title: data.title,
         details: data.description ?? null,
         priority: data.priority ?? 'medium',
+        status: 'todo',
         due_at: data.dueDate ? `${data.dueDate}T00:00:00Z` : null,
         lead_id: data.linkedLeadId ?? null,
         client_id: data.linkedCustomerId ?? null,
@@ -69,8 +70,11 @@ export function useTasks() {
     if (data.description !== undefined) updates.details = data.description
     if (data.priority !== undefined) updates.priority = data.priority
     if (data.dueDate !== undefined) updates.due_at = data.dueDate ? `${data.dueDate}T00:00:00Z` : null
-    if (data.status === 'done') updates.completed_at = new Date().toISOString()
-    if (data.status === 'todo' || data.status === 'in_progress') updates.completed_at = null
+    if (data.status !== undefined) {
+      updates.status = data.status
+      updates.completed_at = data.status === 'done' ? new Date().toISOString() : null
+    }
+    updates.updated_at = new Date().toISOString()
 
     const { data: row, error } = await supabase
       .from('tasks')
