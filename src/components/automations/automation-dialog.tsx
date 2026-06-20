@@ -130,6 +130,7 @@ const ACTION_KEYS: Record<AutomationAction, string> = {
   send_whatsapp: "actionSendWhatsapp",
 };
 
+// Hebrew labels for actions that need a direct string override (not in i18n keys)
 const ACTION_LABELS_HE: Partial<Record<AutomationAction, string>> = {
   send_whatsapp: "שלח WhatsApp",
 };
@@ -762,7 +763,7 @@ export function AutomationDialog({ open, onOpenChange, automation, onSave }: Aut
                               <option value="customerEmail">אימייל (customerEmail)</option>
                             </select>
                           </div>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             ⚠️ נדרשת תבנית מאושרת ב-Meta Business. הגדר WHATSAPP_TOKEN + WHATSAPP_PHONE_NUMBER_ID בהגדרות Vercel.
                           </p>
                         </div>
