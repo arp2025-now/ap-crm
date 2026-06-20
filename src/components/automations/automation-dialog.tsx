@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import {
   Plus, Trash2, ArrowDown, Zap, Clock, MousePointerClick,
   RefreshCw, Mail, Pencil, ListPlus, FilePlus, Bell, Webhook,
-  CheckSquare, ChevronDown, DollarSign, AlertTriangle, Target, Receipt, FileSpreadsheet, MessageCircle,
+  CheckSquare, ChevronDown, DollarSign, AlertTriangle, Target, Receipt, FileSpreadsheet, MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -130,6 +130,10 @@ const ACTION_KEYS: Record<AutomationAction, string> = {
   send_whatsapp: "actionSendWhatsapp",
 };
 
+const ACTION_LABELS_HE: Partial<Record<AutomationAction, string>> = {
+  send_whatsapp: "שלח WhatsApp",
+};
+
 const TRIGGER_ICONS: Record<string, typeof Zap> = {
   lead_created: Zap,
   lead_updated: RefreshCw,
@@ -158,7 +162,7 @@ const ACTION_ICONS: Record<AutomationAction, typeof Zap> = {
   notify: Bell,
   sync_accounting: FileSpreadsheet,
   create_invoice: Receipt,
-  send_whatsapp: MessageCircle,
+  send_whatsapp: MessageSquare,
 };
 
 const ACTION_COLORS: Record<AutomationAction, string> = {
@@ -524,7 +528,7 @@ export function AutomationDialog({ open, onOpenChange, automation, onSave }: Aut
                           className="bg-transparent text-xs font-semibold border-none focus:ring-0 cursor-pointer"
                         >
                           {ACTIONS.map((act) => (
-                            <option key={act} value={act}>{t(ACTION_KEYS[act])}</option>
+                            <option key={act} value={act}>{ACTION_LABELS_HE[act] ?? t(ACTION_KEYS[act])}</option>
                           ))}
                         </select>
                       </div>
@@ -720,6 +724,47 @@ export function AutomationDialog({ open, onOpenChange, automation, onSave }: Aut
                               <option value="PATCH">PATCH</option>
                             </select>
                           </div>
+                        </div>
+                      )}
+
+                      {step.action === "send_whatsapp" && (
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <label className="text-xs text-muted-foreground">שם תבנית (Template Name)</label>
+                              <input
+                                value={cfg.whatsappTemplateName ?? ""}
+                                onChange={(e) => updateStepConfig(i, "whatsappTemplateName", e.target.value)}
+                                className="w-full rounded-lg border bg-background px-2 py-1.5 text-xs font-mono"
+                                placeholder="hello_world"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-xs text-muted-foreground">שפת תבנית</label>
+                              <select
+                                value={cfg.whatsappTemplateLanguage ?? "he"}
+                                onChange={(e) => updateStepConfig(i, "whatsappTemplateLanguage", e.target.value)}
+                                className="w-full rounded-lg border bg-background px-2 py-1.5 text-xs"
+                              >
+                                <option value="he">עברית (he)</option>
+                                <option value="en_US">English (en_US)</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">שדה טלפון מהליד</label>
+                            <select
+                              value={cfg.whatsappPhoneField ?? "phone"}
+                              onChange={(e) => updateStepConfig(i, "whatsappPhoneField", e.target.value)}
+                              className="w-full rounded-lg border bg-background px-2 py-1.5 text-xs"
+                            >
+                              <option value="phone">טלפון (phone)</option>
+                              <option value="customerEmail">אימייל (customerEmail)</option>
+                            </select>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            ⚠️ נדרשת תבנית מאושרת ב-Meta Business. הגדר WHATSAPP_TOKEN + WHATSAPP_PHONE_NUMBER_ID בהגדרות Vercel.
+                          </p>
                         </div>
                       )}
 
