@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import {
   Plus, Trash2, ArrowDown, Zap, Clock, MousePointerClick,
   RefreshCw, Mail, Pencil, ListPlus, FilePlus, Bell, Webhook,
-  CheckSquare, ChevronDown, DollarSign, AlertTriangle, Target, Receipt, FileSpreadsheet,
+  CheckSquare, ChevronDown, DollarSign, AlertTriangle, Target, Receipt, FileSpreadsheet, MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -96,7 +96,7 @@ const TRIGGER_GROUPS = [
 const ACTIONS: AutomationAction[] = [
   "update_field", "create_instance", "create_field",
   "send_email", "send_webhook", "create_task", "notify",
-  "sync_accounting", "create_invoice",
+  "sync_accounting", "create_invoice", "send_whatsapp",
 ];
 
 const TRIGGER_KEYS: Record<AutomationTrigger, string> = {
@@ -127,6 +127,7 @@ const ACTION_KEYS: Record<AutomationAction, string> = {
   create_field: "actionCreateField",
   sync_accounting: "actionSyncAccounting",
   create_invoice: "actionCreateInvoice",
+  send_whatsapp: "actionSendWhatsapp",
 };
 
 const TRIGGER_ICONS: Record<string, typeof Zap> = {
@@ -157,6 +158,7 @@ const ACTION_ICONS: Record<AutomationAction, typeof Zap> = {
   notify: Bell,
   sync_accounting: FileSpreadsheet,
   create_invoice: Receipt,
+  send_whatsapp: MessageCircle,
 };
 
 const ACTION_COLORS: Record<AutomationAction, string> = {
@@ -169,6 +171,7 @@ const ACTION_COLORS: Record<AutomationAction, string> = {
   notify: "bg-rose-100 text-rose-700 border-rose-200",
   sync_accounting: "bg-teal-100 text-teal-700 border-teal-200",
   create_invoice: "bg-orange-100 text-orange-700 border-orange-200",
+  send_whatsapp: "bg-green-100 text-green-700 border-green-200",
 };
 
 // Helper: get status label in Hebrew

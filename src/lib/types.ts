@@ -462,7 +462,8 @@ export type AutomationAction =
   | "create_instance"
   | "create_field"
   | "sync_accounting"
-  | "create_invoice";
+  | "create_invoice"
+  | "send_whatsapp";
 
 export interface AutomationTriggerConfig {
   // field_changed
@@ -505,6 +506,10 @@ export interface AutomationActionConfig {
   taskAssignee?: string;
   // notify
   message?: string;
+  // send_whatsapp
+  whatsappTemplateName?: string;
+  whatsappTemplateLanguage?: string;
+  whatsappPhoneField?: string;
   // general dynamic key access
   [key: string]: string | Record<string, string> | undefined;
 }

@@ -7,7 +7,7 @@ import {
   Globe, Send, Bell, Pencil, Shield, Sparkles,
   ArrowRight, ArrowDown, ToggleLeft, ToggleRight,
   Clock, MousePointerClick, RefreshCw, Mail, ListPlus,
-  FilePlus, CheckSquare,
+  FilePlus, CheckSquare, MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -61,6 +61,7 @@ const ACTION_ICONS: Record<AutomationAction, typeof Zap> = {
   notify: Bell,
   sync_accounting: RefreshCw,
   create_invoice: FilePlus,
+  send_whatsapp: MessageCircle,
 };
 
 const ACTION_LABELS: Record<AutomationAction, string> = {
@@ -73,6 +74,7 @@ const ACTION_LABELS: Record<AutomationAction, string> = {
   create_field: "actionCreateField",
   sync_accounting: "actionSyncAccounting",
   create_invoice: "actionCreateInvoice",
+  send_whatsapp: "actionSendWhatsapp",
 };
 
 const ACTION_COLORS: Record<AutomationAction, string> = {
@@ -85,6 +87,7 @@ const ACTION_COLORS: Record<AutomationAction, string> = {
   notify: "bg-rose-100 text-rose-700 border-rose-200",
   sync_accounting: "bg-teal-100 text-teal-700 border-teal-200",
   create_invoice: "bg-orange-100 text-orange-700 border-orange-200",
+  send_whatsapp: "bg-green-100 text-green-700 border-green-200",
 };
 
 export default function AutomationsPage() {
