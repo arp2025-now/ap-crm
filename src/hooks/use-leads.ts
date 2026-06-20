@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import type { Lead } from '@/lib/types'
 import type { DbLead } from '@/lib/supabase/types'
 import { createClient } from '@/lib/supabase/client'
+import { runAutomations } from '@/lib/automation-engine'
 
 function dbToLead(row: DbLead): Lead {
   return {
@@ -62,6 +63,15 @@ export function useLeads() {
     if (error) throw error
     const newLead = dbToLead(row)
     setLeads((prev) => [newLead, ...prev])
+    runAutomations("lead_created", {
+      id: newLead.id,
+      customerName: newLead.customerName,
+      phone: newLead.phone,
+      customerEmail: newLead.customerEmail,
+      company: newLead.company,
+      status: newLead.status,
+      createdAt: newLead.createdAt,
+    }).catch(console.error)
     return newLead
   }, [supabase])
 
