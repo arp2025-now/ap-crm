@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
@@ -16,7 +16,7 @@ import type {
   AutomationTriggerConfig, AutomationActionConfig,
 } from "@/lib/types";
 
-// â”€â”€ Entity field definitions â”€â”€
+// ── Entity field definitions ──
 interface EntityFieldDef {
   key: string;
   label: string;
@@ -25,45 +25,45 @@ interface EntityFieldDef {
 }
 
 const LEAD_FIELDS: EntityFieldDef[] = [
-  { key: "customerName", label: "×©×", type: "text" },
-  { key: "customerEmail", label: "××™×ž×™×™×œ", type: "text" },
-  { key: "phone", label: "×˜×œ×¤×•×Ÿ", type: "text" },
-  { key: "company", label: "×—×‘×¨×”", type: "text" },
-  { key: "status", label: "×¡×˜×˜×•×¡", type: "select", options: ["new", "contacted", "qualified", "proposal", "negotiation", "converted", "lost"] },
-  { key: "heatLevel", label: "×¨×ž×ª ×—×•×", type: "select", options: ["hot", "warm", "cold"] },
-  { key: "pipelineValue", label: "×©×•×•×™ ×¢×¡×§×”", type: "number" },
-  { key: "notes", label: "×”×¢×¨×•×ª", type: "text" },
-  { key: "assignedAgentId", label: "×¡×•×›×Ÿ ××—×¨××™", type: "text" },
+  { key: "customerName", label: "שם", type: "text" },
+  { key: "customerEmail", label: "אימייל", type: "text" },
+  { key: "phone", label: "טלפון", type: "text" },
+  { key: "company", label: "חברה", type: "text" },
+  { key: "status", label: "סטטוס", type: "select", options: ["new", "contacted", "qualified", "proposal", "negotiation", "converted", "lost"] },
+  { key: "heatLevel", label: "רמת חום", type: "select", options: ["hot", "warm", "cold"] },
+  { key: "pipelineValue", label: "שווי עסקה", type: "number" },
+  { key: "notes", label: "הערות", type: "text" },
+  { key: "assignedAgentId", label: "סוכן אחראי", type: "text" },
 ];
 
 const CUSTOMER_FIELDS: EntityFieldDef[] = [
-  { key: "name", label: "×©×", type: "text" },
-  { key: "email", label: "××™×ž×™×™×œ", type: "text" },
-  { key: "phone", label: "×˜×œ×¤×•×Ÿ", type: "text" },
-  { key: "company", label: "×—×‘×¨×”", type: "text" },
-  { key: "industry", label: "×ª×¢×©×™×™×”", type: "text" },
-  { key: "lifecycleStage", label: "×©×œ×‘", type: "select", options: ["active", "churned", "vip"] },
-  { key: "tags", label: "×ª×’×™×•×ª", type: "text" },
-  { key: "assignedAgentId", label: "×¡×•×›×Ÿ ××—×¨××™", type: "text" },
+  { key: "name", label: "שם", type: "text" },
+  { key: "email", label: "אימייל", type: "text" },
+  { key: "phone", label: "טלפון", type: "text" },
+  { key: "company", label: "חברה", type: "text" },
+  { key: "industry", label: "תעשייה", type: "text" },
+  { key: "lifecycleStage", label: "שלב", type: "select", options: ["active", "churned", "vip"] },
+  { key: "tags", label: "תגיות", type: "text" },
+  { key: "assignedAgentId", label: "סוכן אחראי", type: "text" },
 ];
 
 const QUOTE_FIELDS: EntityFieldDef[] = [
-  { key: "status", label: "×¡×˜×˜×•×¡", type: "select", options: ["draft", "sent", "viewed", "signed", "rejected", "expired"] },
-  { key: "customerName", label: "×©× ×œ×§×•×—", type: "text" },
-  { key: "total", label: "×¡×”\"×›", type: "number" },
-  { key: "validUntil", label: "×‘×ª×•×§×£ ×¢×“", type: "date" },
-  { key: "notes", label: "×”×¢×¨×•×ª", type: "text" },
-  { key: "terms", label: "×ª× ××™×", type: "text" },
-  { key: "includeVat", label: "×›×•×œ×œ ×ž×¢\"×ž", type: "select", options: ["true", "false"] },
-  { key: "globalDiscount", label: "×”× ×—×” ×›×œ×œ×™×ª (%)", type: "number" },
+  { key: "status", label: "סטטוס", type: "select", options: ["draft", "sent", "viewed", "signed", "rejected", "expired"] },
+  { key: "customerName", label: "שם לקוח", type: "text" },
+  { key: "total", label: "סה\"כ", type: "number" },
+  { key: "validUntil", label: "בתוקף עד", type: "date" },
+  { key: "notes", label: "הערות", type: "text" },
+  { key: "terms", label: "תנאים", type: "text" },
+  { key: "includeVat", label: "כולל מע\"מ", type: "select", options: ["true", "false"] },
+  { key: "globalDiscount", label: "הנחה כללית (%)", type: "number" },
 ];
 
 const TASK_FIELDS: EntityFieldDef[] = [
-  { key: "title", label: "×›×•×ª×¨×ª", type: "text" },
-  { key: "status", label: "×¡×˜×˜×•×¡", type: "select", options: ["todo", "in_progress", "done"] },
-  { key: "priority", label: "×¢×“×™×¤×•×ª", type: "select", options: ["low", "medium", "high"] },
-  { key: "dueDate", label: "×ª××¨×™×š ×™×¢×“", type: "date" },
-  { key: "description", label: "×ª×™××•×¨", type: "text" },
+  { key: "title", label: "כותרת", type: "text" },
+  { key: "status", label: "סטטוס", type: "select", options: ["todo", "in_progress", "done"] },
+  { key: "priority", label: "עדיפות", type: "select", options: ["low", "medium", "high"] },
+  { key: "dueDate", label: "תאריך יעד", type: "date" },
+  { key: "description", label: "תיאור", type: "text" },
 ];
 
 const ENTITY_FIELDS: Record<string, EntityFieldDef[]> = {
@@ -73,7 +73,7 @@ const ENTITY_FIELDS: Record<string, EntityFieldDef[]> = {
   task: TASK_FIELDS,
 };
 
-// â”€â”€ Trigger categories â”€â”€
+// ── Trigger categories ──
 const TRIGGER_GROUPS = [
   {
     category: "events",
@@ -181,14 +181,14 @@ const ACTION_COLORS: Record<AutomationAction, string> = {
 
 // Helper: get status label in Hebrew
 const STATUS_LABELS: Record<string, string> = {
-  new: "×—×“×©", contacted: "×¤× ×™×™×” ×¨××©×•× ×”", qualified: "×ž×ª××™×", proposal: "×”×¦×¢×”",
-  negotiation: "×ž×©× ×•×ž×ª×Ÿ", converted: "×”×•×ž×¨", lost: "××‘×“",
-  hot: "×—×", warm: "×—×ž×™×", cold: "×§×¨",
-  active: "×¤×¢×™×œ", churned: "× ×˜×©", vip: "VIP",
-  draft: "×˜×™×•×˜×”", sent: "× ×©×œ×—", viewed: "× ×¦×¤×”", signed: "× ×—×ª×", rejected: "× ×“×—×”", expired: "×¤×’ ×ª×•×§×£",
-  todo: "×œ×‘×™×¦×•×¢", in_progress: "×‘×ª×”×œ×™×š", done: "×”×•×©×œ×",
-  low: "× ×ž×•×›×”", medium: "×‘×™× ×•× ×™×ª", high: "×’×‘×•×”×”",
-  true: "×›×Ÿ", false: "×œ×",
+  new: "חדש", contacted: "פנייה ראשונה", qualified: "מתאים", proposal: "הצעה",
+  negotiation: "משא ומתן", converted: "הומר", lost: "אבד",
+  hot: "חם", warm: "חמים", cold: "קר",
+  active: "פעיל", churned: "נטש", vip: "VIP",
+  draft: "טיוטה", sent: "נשלח", viewed: "נצפה", signed: "נחתם", rejected: "נדחה", expired: "פג תוקף",
+  todo: "לביצוע", in_progress: "בתהליך", done: "הושלם",
+  low: "נמוכה", medium: "בינונית", high: "גבוהה",
+  true: "כן", false: "לא",
 };
 
 interface AutomationDialogProps {
@@ -265,7 +265,7 @@ export function AutomationDialog({ open, onOpenChange, automation, onSave }: Aut
 
   const TriggerIcon = TRIGGER_ICONS[trigger] ?? Zap;
 
-  // Render the value input â€” either a dropdown (for select fields) or a text/number/date input
+  // Render the value input — either a dropdown (for select fields) or a text/number/date input
   const renderValueInput = (
     entity: string,
     fieldKey: string,
@@ -335,7 +335,7 @@ export function AutomationDialog({ open, onOpenChange, automation, onSave }: Aut
             </div>
           </div>
 
-          {/* â”€â”€ TRIGGER SECTION â”€â”€ */}
+          {/* ── TRIGGER SECTION ── */}
           <div className="rounded-2xl border-2 border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-800 overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-3 bg-blue-100/80 dark:bg-blue-900/30 border-b border-blue-200 dark:border-blue-800">
               <div className="h-7 w-7 rounded-lg bg-blue-600 flex items-center justify-center">
@@ -350,17 +350,17 @@ export function AutomationDialog({ open, onOpenChange, automation, onSave }: Aut
                 onChange={(e) => { setTrigger(e.target.value as AutomationTrigger); setTriggerConfig({}); }}
                 className="w-full rounded-xl border bg-background px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-all font-medium"
               >
-                <optgroup label="××™×¨×•×¢×™×">
+                <optgroup label="אירועים">
                   {TRIGGER_GROUPS[0].triggers.map((tr) => (
                     <option key={tr} value={tr}>{t(TRIGGER_KEYS[tr])}</option>
                   ))}
                 </optgroup>
-                <optgroup label="×¤×™× × ×¡×™×">
+                <optgroup label="פיננסים">
                   {TRIGGER_GROUPS[1].triggers.map((tr) => (
                     <option key={tr} value={tr}>{t(TRIGGER_KEYS[tr])}</option>
                   ))}
                 </optgroup>
-                <optgroup label="×ž×ª×§×“×">
+                <optgroup label="מתקדם">
                   {TRIGGER_GROUPS[2].triggers.map((tr) => (
                     <option key={tr} value={tr}>{t(TRIGGER_KEYS[tr])}</option>
                   ))}
@@ -479,7 +479,7 @@ export function AutomationDialog({ open, onOpenChange, automation, onSave }: Aut
             </div>
           </div>
 
-          {/* â”€â”€ CONNECTOR â”€â”€ */}
+          {/* ── CONNECTOR ── */}
           <div className="flex justify-center">
             <div className="flex flex-col items-center">
               <div className="h-6 w-0.5 bg-gradient-to-b from-blue-400 to-emerald-400" />
@@ -490,7 +490,7 @@ export function AutomationDialog({ open, onOpenChange, automation, onSave }: Aut
             </div>
           </div>
 
-          {/* â”€â”€ ACTIONS SECTION â”€â”€ */}
+          {/* ── ACTIONS SECTION ── */}
           <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20 dark:border-emerald-800 overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 bg-emerald-100/80 dark:bg-emerald-900/30 border-b border-emerald-200 dark:border-emerald-800">
               <div className="flex items-center gap-2">
@@ -824,7 +824,7 @@ export function AutomationDialog({ open, onOpenChange, automation, onSave }: Aut
                             className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all hover:scale-[1.02] hover:shadow-sm ${colorClass}`}
                           >
                             <AIcon className="h-3.5 w-3.5" />
-                            {t(ACTION_KEYS[act])}
+                            {ACTION_LABELS_HE[act] ?? t(ACTION_KEYS[act])}
                           </button>
                         );
                       })}
