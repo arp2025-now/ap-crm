@@ -96,6 +96,21 @@ export function useLeads() {
     if (error) throw error
     const updated = dbToLead(row)
     setLeads((prev) => prev.map((l) => (l.id === id ? updated : l)))
+    const changedFields = Object.keys(data)
+    runAutomations("lead_updated", {
+      id: updated.id,
+      customerName: updated.customerName,
+      phone: updated.phone,
+      customerEmail: updated.customerEmail,
+      company: updated.company,
+      status: updated.status,
+      heatLevel: updated.heatLevel,
+      pipelineValue: updated.pipelineValue,
+      notes: updated.notes,
+      assignedAgentId: updated.assignedAgentId,
+      createdAt: updated.createdAt,
+      changedFields,
+    }).catch(console.error)
   }, [supabase])
 
   const deleteLead = useCallback(async (id: string) => {

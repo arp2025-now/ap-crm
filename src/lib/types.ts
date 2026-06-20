@@ -465,12 +465,28 @@ export type AutomationAction =
   | "create_invoice"
   | "send_whatsapp";
 
+export type AutomationConditionOperator =
+  | "equals"
+  | "not_equals"
+  | "contains"
+  | "not_contains"
+  | "is_empty"
+  | "is_not_empty";
+
+export interface AutomationCondition {
+  field: string;
+  operator: AutomationConditionOperator;
+  value?: string;
+}
+
 export interface AutomationTriggerConfig {
   // field_changed
   entity?: string;    // "lead" | "customer" | "quote"
   field?: string;     // which field
   fromValue?: string;
   toValue?: string;
+  // lead_updated — watch only specific fields
+  watchedFields?: string[];
   // scheduled
   scheduleType?: "daily" | "weekly" | "monthly" | "custom";
   scheduleTime?: string; // HH:mm
@@ -479,6 +495,8 @@ export interface AutomationTriggerConfig {
   // button_click
   buttonLabel?: string;
   buttonColor?: string;
+  // conditions / filters — run only when all pass
+  conditions?: AutomationCondition[];
 }
 
 export interface AutomationActionConfig {

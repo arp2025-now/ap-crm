@@ -1,4 +1,4 @@
-import type { Automation, AutomationTrigger } from "@/lib/types";
+import type { Automation, AutomationTrigger, AutomationCondition } from "@/lib/types";
 import type { DbAutomation } from "@/lib/supabase/types";
 import { createClient } from "@/lib/supabase/client";
 
@@ -9,7 +9,28 @@ export interface LeadPayload {
   customerEmail?: string;
   company?: string;
   status: string;
+  heatLevel?: string;
+  pipelineValue?: number;
+  notes?: string;
+  assignedAgentId?: string;
   createdAt: string;
+  changedFields?: string[]; // populated on lead_updated
+}
+
+function checkConditions(conditions: AutomationCondition[], lead: LeadPayload): boolean {
+  return conditions.every((cond) => {
+    const val = (lead as unknown as Record<string, unknown>)[cond.field];
+    const strVal = val === undefined || val === null ? "" : String(val);
+    switch (cond.operator) {
+      case "equals": return strVal === (cond.value ?? "");
+      case "not_equals": return strVal !== (cond.value ?? "");
+      case "contains": return strVal.includes(cond.value ?? "");
+      case "not_contains": return !strVal.includes(cond.value ?? "");
+      case "is_empty": return strVal === "";
+      case "is_not_empty": return strVal !== "";
+      default: return true;
+    }
+  });
 }
 
 async function loadAutomations(): Promise<Automation[]> {
@@ -86,6 +107,20 @@ export async function runAutomations(
     const matching = automations.filter((a) => a.trigger === trigger);
 
     for (const automation of matching) {
+      // For lead_updated: skip if the changed field isn't one we're watching
+      if (trigger === "lead_updated") {
+        const watched = automation.triggerConfig?.watchedFields ?? [];
+        if (watched.length > 0) {
+          const changed = lead.changedFields ?? [];
+          const hasMatch = watched.some((f) => changed.includes(f));
+          if (!hasMatch) continue;
+        }
+      }
+
+      // Check conditions / filters
+      const conditions = automation.triggerConfig?.conditions ?? [];
+      if (conditions.length > 0 && !checkConditions(conditions, lead)) continue;
+
       for (const step of automation.steps) {
         try {
           const cfg = step.config;

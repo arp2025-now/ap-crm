@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import {
   Plus, Trash2, ArrowDown, Zap, Clock, MousePointerClick,
   RefreshCw, Mail, Pencil, ListPlus, FilePlus, Bell, Webhook,
-  CheckSquare, ChevronDown, DollarSign, AlertTriangle, Target, Receipt, FileSpreadsheet, MessageSquare,
+  CheckSquare, ChevronDown, DollarSign, AlertTriangle, Target, Receipt, FileSpreadsheet, MessageSquare, Filter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,7 @@ import {
 import type {
   Automation, AutomationTrigger, AutomationAction, AutomationStep,
   AutomationTriggerConfig, AutomationActionConfig,
+  AutomationCondition, AutomationConditionOperator,
 } from "@/lib/types";
 
 // ── Entity field definitions ──
@@ -178,6 +179,17 @@ const ACTION_COLORS: Record<AutomationAction, string> = {
   create_invoice: "bg-orange-100 text-orange-700 border-orange-200",
   send_whatsapp: "bg-green-100 text-green-700 border-green-200",
 };
+
+// Condition operators
+const OPERATOR_LABELS: Record<AutomationConditionOperator, string> = {
+  equals: "שווה ל",
+  not_equals: "לא שווה ל",
+  contains: "מכיל",
+  not_contains: "לא מכיל",
+  is_empty: "ריק",
+  is_not_empty: "לא ריק",
+};
+const OPERATORS_WITH_VALUE: AutomationConditionOperator[] = ["equals", "not_equals", "contains", "not_contains"];
 
 // Helper: get status label in Hebrew
 const STATUS_LABELS: Record<string, string> = {
@@ -476,8 +488,135 @@ export function AutomationDialog({ open, onOpenChange, automation, onSave }: Aut
                   </div>
                 </div>
               )}
+
+              {/* lead_updated — watched fields */}
+              {trigger === "lead_updated" && (
+                <div className="rounded-xl border bg-white dark:bg-background p-3 space-y-2">
+                  <p className="text-xs font-semibold text-blue-600">הפעל רק כשמשתנה אחד מהשדות</p>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {LEAD_FIELDS.map((f) => {
+                      const watched = triggerConfig.watchedFields ?? [];
+                      const checked = watched.includes(f.key);
+                      return (
+                        <label
+                          key={f.key}
+                          className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border cursor-pointer text-xs transition-colors select-none ${
+                            checked ? "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-900/20 dark:border-blue-600" : "border-muted hover:bg-muted/50"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              const current = triggerConfig.watchedFields ?? [];
+                              setTriggerConfig({
+                                ...triggerConfig,
+                                watchedFields: e.target.checked
+                                  ? [...current, f.key]
+                                  : current.filter((k) => k !== f.key),
+                              });
+                            }}
+                            className="w-3 h-3 accent-blue-600"
+                          />
+                          {f.label}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {(triggerConfig.watchedFields ?? []).length === 0 && (
+                    <p className="text-xs text-muted-foreground">ללא סינון — יופעל על כל שינוי בליד</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
+
+          {/* ── CONDITIONS / FILTERS SECTION ── */}
+          {(() => {
+            const conditions: AutomationCondition[] = (triggerConfig.conditions as AutomationCondition[] | undefined) ?? [];
+            const addCondition = () => {
+              setTriggerConfig({
+                ...triggerConfig,
+                conditions: [...conditions, { field: "status", operator: "equals", value: "" }],
+              });
+            };
+            const updateCondition = (idx: number, updates: Partial<AutomationCondition>) => {
+              const updated = conditions.map((c, i) => (i === idx ? { ...c, ...updates } : c));
+              setTriggerConfig({ ...triggerConfig, conditions: updated });
+            };
+            const removeCondition = (idx: number) => {
+              setTriggerConfig({ ...triggerConfig, conditions: conditions.filter((_, i) => i !== idx) });
+            };
+            return (
+              <div className="rounded-2xl border-2 border-violet-200 bg-violet-50/50 dark:bg-violet-950/20 dark:border-violet-800 overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 bg-violet-100/80 dark:bg-violet-900/30 border-b border-violet-200 dark:border-violet-800">
+                  <div className="flex items-center gap-2">
+                    <div className="h-6 w-6 rounded-lg bg-violet-600 flex items-center justify-center">
+                      <Filter className="h-3 w-3 text-white" />
+                    </div>
+                    <span className="font-bold text-xs text-violet-800 dark:text-violet-300">
+                      פילטרים — הפעל רק כאשר
+                      {conditions.length > 0 && <span className="ml-1 font-normal">({conditions.length})</span>}
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={addCondition}
+                    className="h-6 px-2 text-xs text-violet-600 hover:bg-violet-200/50"
+                  >
+                    <Plus className="h-3 w-3 me-1" />
+                    הוסף תנאי
+                  </Button>
+                </div>
+                <div className="p-3 space-y-2">
+                  {conditions.length === 0 ? (
+                    <p className="text-xs text-center text-muted-foreground py-1">ללא פילטרים — האוטומציה תופעל תמיד</p>
+                  ) : (
+                    conditions.map((cond, idx) => (
+                      <div key={idx} className="flex items-center gap-1.5 flex-wrap">
+                        {idx > 0 && <span className="text-xs text-muted-foreground w-full ps-1">וגם</span>}
+                        <select
+                          value={cond.field}
+                          onChange={(e) => updateCondition(idx, { field: e.target.value, value: "" })}
+                          className="rounded-lg border bg-background px-2 py-1.5 text-xs flex-1 min-w-0"
+                        >
+                          {LEAD_FIELDS.map((f) => (
+                            <option key={f.key} value={f.key}>{f.label}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={cond.operator}
+                          onChange={(e) => updateCondition(idx, { operator: e.target.value as AutomationConditionOperator })}
+                          className="rounded-lg border bg-background px-2 py-1.5 text-xs"
+                        >
+                          {(Object.keys(OPERATOR_LABELS) as AutomationConditionOperator[]).map((op) => (
+                            <option key={op} value={op}>{OPERATOR_LABELS[op]}</option>
+                          ))}
+                        </select>
+                        {OPERATORS_WITH_VALUE.includes(cond.operator) && (
+                          <input
+                            value={cond.value ?? ""}
+                            onChange={(e) => updateCondition(idx, { value: e.target.value })}
+                            className="rounded-lg border bg-background px-2 py-1.5 text-xs w-24"
+                            placeholder="ערך"
+                          />
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-destructive/60 hover:text-destructive flex-shrink-0"
+                          onClick={() => removeCondition(idx)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* ── CONNECTOR ── */}
           <div className="flex justify-center">
