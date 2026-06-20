@@ -85,6 +85,7 @@ export default function SettingsPage() {
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [editFieldName, setEditFieldName] = useState('');
   const [editFieldType, setEditFieldType] = useState<FieldType>('text');
+  const [editFieldChoices, setEditFieldChoices] = useState('');
   const [editFieldRequired, setEditFieldRequired] = useState(false);
 
   const {
@@ -668,6 +669,16 @@ export default function SettingsPage() {
                           <option value="phone">טלפון</option>
                           <option value="url">קישור</option>
                         </select>
+                        {(editFieldType === 'dropdown' || editFieldType === 'multi_select') && (
+                          <input
+                            type="text"
+                            value={editFieldChoices}
+                            onChange={e => setEditFieldChoices(e.target.value)}
+                            placeholder="אפשרויות — מופרדות בפסיק (אדום, כחול, ירוק)"
+                            className="w-full border rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                            dir="rtl"
+                          />
+                        )}
                         <label className="flex items-center gap-2 text-sm cursor-pointer">
                           <input
                             type="checkbox"
@@ -685,6 +696,9 @@ export default function SettingsPage() {
                                 name: editFieldName.trim(),
                                 fieldType: editFieldType,
                                 isRequired: editFieldRequired,
+                                options: (editFieldType === 'dropdown' || editFieldType === 'multi_select')
+                                  ? { choices: editFieldChoices.split(',').map(s => s.trim()).filter(Boolean) }
+                                  : {},
                               });
                               setEditingFieldId(null);
                             }}
@@ -717,6 +731,7 @@ export default function SettingsPage() {
                               setEditingFieldId(field.id);
                               setEditFieldName(field.name);
                               setEditFieldType(field.fieldType);
+                              setEditFieldChoices(field.options.choices?.join(', ') ?? '');
                               setEditFieldRequired(field.isRequired);
                             }}
                             className="text-gray-400 hover:text-indigo-600 p-1 rounded transition-colors"
