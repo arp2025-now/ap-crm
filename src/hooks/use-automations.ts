@@ -110,52 +110,88 @@ export function useApiKeys() {
   return { apiKeys, addApiKey, deleteApiKey };
 }
 
-// ── Automations ──
+// ── Automations (Supabase-backed) ──
+
+import { createClient } from "@/lib/supabase/client";
+import type { DbAutomation } from "@/lib/supabase/types";
+
+function dbToAutomation(row: DbAutomation): Automation {
+  return {
+    id: row.id,
+    name: row.name,
+    description: "",
+    active: row.active,
+    trigger: row.trigger as Automation["trigger"],
+    triggerConfig: (row.trigger_config ?? {}) as Automation["triggerConfig"],
+    steps: (row.steps ?? []) as unknown as Automation["steps"],
+    runCount: row.run_count,
+    lastRunAt: row.last_run_at ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
 
 export function useAutomations() {
   const [automations, setAutomations] = useState<Automation[]>([]);
+  const supabase = createClient();
 
-  useEffect(() => {
-    setAutomations(loadFromStorage<Automation>(AUTOMATIONS_KEY, []));
-  }, []);
+  const load = useCallback(async () => {
+    const { data } = await supabase
+      .from("automations")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) setAutomations((data as DbAutomation[]).map(dbToAutomation));
+  }, [supabase]);
 
-  const save = useCallback((updated: Automation[]) => {
-    setAutomations(updated);
-    saveToStorage(AUTOMATIONS_KEY, updated);
-  }, []);
+  useEffect(() => { load(); }, [load]);
 
-  const addAutomation = useCallback((data: Omit<Automation, "id" | "createdAt" | "updatedAt" | "runCount" | "lastRunAt">) => {
-    const automation: Automation = {
-      ...data,
-      id: `auto-${Date.now()}`,
-      runCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    save([...automations, automation]);
+  const addAutomation = useCallback(async (data: Omit<Automation, "id" | "createdAt" | "updatedAt" | "runCount" | "lastRunAt">) => {
+    const { data: row, error } = await supabase
+      .from("automations")
+      .insert({
+        name: data.name,
+        active: data.active ?? true,
+        trigger: data.trigger,
+        trigger_config: data.triggerConfig ?? {},
+        steps: data.steps ?? [],
+        run_count: 0,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    const automation = dbToAutomation(row as DbAutomation);
+    setAutomations((prev) => [automation, ...prev]);
     logActivity("create", "automation", automation.id, data.name);
     return automation;
-  }, [automations, save]);
+  }, [supabase]);
 
-  const updateAutomation = useCallback((id: string, data: Partial<Automation>) => {
+  const updateAutomation = useCallback(async (id: string, data: Partial<Automation>) => {
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (data.name !== undefined) updates.name = data.name;
+    if (data.active !== undefined) updates.active = data.active;
+    if (data.trigger !== undefined) updates.trigger = data.trigger;
+    if (data.triggerConfig !== undefined) updates.trigger_config = data.triggerConfig;
+    if (data.steps !== undefined) updates.steps = data.steps;
+    const { error } = await supabase.from("automations").update(updates).eq("id", id);
+    if (error) throw error;
+    setAutomations((prev) => prev.map((a) => a.id === id ? { ...a, ...data, updatedAt: updates.updated_at as string } : a));
     const prev = automations.find((a) => a.id === id);
-    save(automations.map((a) => (a.id === id ? { ...a, ...data, updatedAt: new Date().toISOString() } : a)));
-    if (prev) {
-      logActivity("update", "automation", id, prev.name);
-    }
-  }, [automations, save]);
+    if (prev) logActivity("update", "automation", id, prev.name);
+  }, [supabase, automations]);
 
-  const deleteAutomation = useCallback((id: string) => {
+  const deleteAutomation = useCallback(async (id: string) => {
     const prev = automations.find((a) => a.id === id);
-    save(automations.filter((a) => a.id !== id));
-    if (prev) {
-      logActivity("delete", "automation", id, prev.name);
-    }
-  }, [automations, save]);
+    const { error } = await supabase.from("automations").delete().eq("id", id);
+    if (error) throw error;
+    setAutomations((prev2) => prev2.filter((a) => a.id !== id));
+    if (prev) logActivity("delete", "automation", id, prev.name);
+  }, [supabase, automations]);
 
-  const toggleAutomation = useCallback((id: string) => {
-    save(automations.map((a) => (a.id === id ? { ...a, active: !a.active, updatedAt: new Date().toISOString() } : a)));
-  }, [automations, save]);
+  const toggleAutomation = useCallback(async (id: string) => {
+    const current = automations.find((a) => a.id === id);
+    if (!current) return;
+    await updateAutomation(id, { active: !current.active });
+  }, [automations, updateAutomation]);
 
   return { automations, addAutomation, updateAutomation, deleteAutomation, toggleAutomation };
 }

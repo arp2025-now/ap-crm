@@ -101,6 +101,19 @@ export type DbPipelineStage = {
   created_at: string
 }
 
+export type DbAutomation = {
+  id: string
+  name: string
+  active: boolean
+  trigger: string
+  trigger_config: Json
+  steps: Json
+  run_count: number
+  last_run_at: string | null
+  created_at: string
+  updated_at: string
+}
+
 // Backward-compat aliases — existing imports continue to work
 // while migrations to Db* names happen incrementally in later tasks.
 export type Lead = DbLead

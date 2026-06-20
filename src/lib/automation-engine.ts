@@ -1,6 +1,6 @@
 import type { Automation, AutomationTrigger } from "@/lib/types";
-
-const AUTOMATIONS_KEY = "crm-automations";
+import type { DbAutomation } from "@/lib/supabase/types";
+import { createClient } from "@/lib/supabase/client";
 
 export interface LeadPayload {
   id: string;
@@ -12,14 +12,26 @@ export interface LeadPayload {
   createdAt: string;
 }
 
-function loadAutomations(): Automation[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(AUTOMATIONS_KEY);
-    return raw ? (JSON.parse(raw) as Automation[]) : [];
-  } catch {
-    return [];
-  }
+async function loadAutomations(): Promise<Automation[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("automations")
+    .select("*")
+    .eq("active", true);
+  if (!data) return [];
+  return (data as DbAutomation[]).map((row) => ({
+    id: row.id,
+    name: row.name,
+    description: "",
+    active: row.active,
+    trigger: row.trigger as Automation["trigger"],
+    triggerConfig: (row.trigger_config ?? {}) as Automation["triggerConfig"],
+    steps: (row.steps ?? []) as unknown as Automation["steps"],
+    runCount: row.run_count,
+    lastRunAt: row.last_run_at ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }));
 }
 
 async function executeWebhook(
@@ -70,8 +82,8 @@ export async function runAutomations(
   lead: LeadPayload,
 ): Promise<void> {
   try {
-    const automations = loadAutomations();
-    const matching = automations.filter((a) => a.active && a.trigger === trigger);
+    const automations = await loadAutomations();
+    const matching = automations.filter((a) => a.trigger === trigger);
 
     for (const automation of matching) {
       for (const step of automation.steps) {
