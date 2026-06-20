@@ -17,7 +17,13 @@ const PRIORITY_FROM_DB: Record<string, string> = {
   'גבוה': 'high',
 }
 
-function dbToTask(row: DbTask): Task {
+type DbTaskWithJoins = DbTask & {
+  leads?: { full_name: string } | null
+  clients?: { full_name: string } | null
+}
+
+function dbToTask(row: DbTaskWithJoins): Task {
+  const rawTime = row.due_at?.slice(11, 16)
   return {
     id: row.id,
     title: row.title,
@@ -25,8 +31,11 @@ function dbToTask(row: DbTask): Task {
     status: (row.status as TaskStatus) ?? 'todo',
     priority: (PRIORITY_FROM_DB[row.priority ?? ''] ?? 'medium') as TaskPriority,
     dueDate: row.due_at?.split('T')[0],
+    dueTime: rawTime && rawTime !== '00:00' ? rawTime : undefined,
     linkedLeadId: row.lead_id ?? undefined,
+    linkedLeadName: row.leads?.full_name ?? undefined,
     linkedCustomerId: row.client_id ?? undefined,
+    linkedCustomerName: row.clients?.full_name ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at ?? row.created_at,
     createdBy: row.assigned_to ?? 'ענת',
@@ -40,9 +49,9 @@ export function useTasks() {
   const load = useCallback(async () => {
     const { data } = await supabase
       .from('tasks')
-      .select('*')
+      .select('*, leads(full_name), clients(full_name)')
       .order('created_at', { ascending: false })
-    if (data) setTasks((data as DbTask[]).map(dbToTask))
+    if (data) setTasks((data as DbTaskWithJoins[]).map(dbToTask))
   }, [supabase])
 
   useEffect(() => { load() }, [load])
@@ -52,6 +61,7 @@ export function useTasks() {
     description?: string
     priority?: TaskPriority
     dueDate?: string
+    dueTime?: string
     linkedLeadId?: string
     linkedLeadName?: string
     linkedCustomerId?: string
@@ -64,14 +74,14 @@ export function useTasks() {
         details: data.description ?? null,
         priority: PRIORITY_TO_DB[data.priority ?? 'medium'] ?? 'בינוני',
         status: 'todo',
-        due_at: data.dueDate ? `${data.dueDate}T00:00:00Z` : null,
+        due_at: data.dueDate ? `${data.dueDate}T${data.dueTime ?? '00:00'}:00` : null,
         lead_id: data.linkedLeadId ?? null,
         client_id: data.linkedCustomerId ?? null,
       })
-      .select()
+      .select('*, leads(full_name), clients(full_name)')
       .single()
     if (error) throw error
-    const task = dbToTask(row as DbTask)
+    const task = dbToTask(row as DbTaskWithJoins)
     setTasks((prev) => [task, ...prev])
     return task
   }, [supabase])
@@ -81,7 +91,7 @@ export function useTasks() {
     if (data.title !== undefined) updates.title = data.title
     if (data.description !== undefined) updates.details = data.description
     if (data.priority !== undefined) updates.priority = PRIORITY_TO_DB[data.priority] ?? 'בינוני'
-    if (data.dueDate !== undefined) updates.due_at = data.dueDate ? `${data.dueDate}T00:00:00Z` : null
+    if (data.dueDate !== undefined) updates.due_at = data.dueDate ? `${data.dueDate}T${data.dueTime ?? '00:00'}:00` : null
     if (data.status !== undefined) {
       updates.status = data.status
       updates.completed_at = data.status === 'done' ? new Date().toISOString() : null
@@ -92,10 +102,10 @@ export function useTasks() {
       .from('tasks')
       .update(updates)
       .eq('id', id)
-      .select()
+      .select('*, leads(full_name), clients(full_name)')
       .single()
     if (error) throw error
-    setTasks((prev) => prev.map((t) => (t.id === id ? dbToTask(row as DbTask) : t)))
+    setTasks((prev) => prev.map((t) => (t.id === id ? dbToTask(row as DbTaskWithJoins) : t)))
   }, [supabase])
 
   const deleteTask = useCallback(async (id: string) => {
