@@ -150,7 +150,7 @@ export function ProjectDialog({ open, onClose, onSave, initial, defaultLeadId, d
 
           {/* Price */}
           <div>
-            <label className="block text-xs font-semibold text-muted-foreground mb-1">מחיר ללא מע"מ (₪)</label>
+            <label className="block text-xs font-semibold text-muted-foreground mb-1">מחיר ללא מע&quot;מ (₪)</label>
             <div className="flex gap-2 items-center">
               <input
                 type="number"
@@ -162,7 +162,7 @@ export function ProjectDialog({ open, onClose, onSave, initial, defaultLeadId, d
               />
               {priceNum > 0 && (
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
-                  כולל מע"מ: ₪{priceInclVat.toFixed(0)}
+                  כולל מע&quot;מ: ₪{priceInclVat.toFixed(0)}
                 </span>
               )}
             </div>
