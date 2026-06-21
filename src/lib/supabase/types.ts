@@ -114,6 +114,34 @@ export type DbAutomation = {
   updated_at: string
 }
 
+export type DbProject = {
+  id: string
+  name: string
+  type: string
+  status: string
+  lead_id: string | null
+  client_id: string | null
+  start_date: string | null
+  expected_end_date: string | null
+  actual_end_date: string | null
+  price_excl_vat: number | null
+  notes: string | null
+  spec_doc_url: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type DbQuestionnaireSubmission = {
+  id: string
+  type: string
+  lead_id: string | null
+  client_id: string | null
+  answers: Json
+  ai_summary: string | null
+  submitted_at: string | null
+  created_at: string
+}
+
 // Backward-compat aliases — existing imports continue to work
 // while migrations to Db* names happen incrementally in later tasks.
 export type Lead = DbLead

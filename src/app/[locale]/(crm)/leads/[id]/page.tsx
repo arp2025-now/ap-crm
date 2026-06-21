@@ -7,7 +7,7 @@ import Link from "next/link";
 import {
   ArrowRight, Mail, Phone, Building2, Flame, Thermometer, Snowflake,
   CheckSquare, Plus, TrendingUp, User, UserCheck, FileText, ClipboardList, Zap, StickyNote,
-  CalendarDays, Video,
+  CalendarDays, Video, FolderKanban, BookOpen, ExternalLink, Eye, Trash2,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,11 @@ import { useRecordings } from "@/hooks/use-recordings";
 import { useCustomFieldDefinitions } from "@/hooks/use-custom-field-definitions";
 import { useCustomFieldValues } from "@/hooks/use-custom-field-values";
 import { CustomFieldsSection } from "@/components/custom-fields/custom-fields-section";
+import { useProjects } from "@/hooks/use-projects";
+import { useQuestionnaires } from "@/hooks/use-questionnaires";
+import { ProjectDialog } from "@/components/projects/project-dialog";
+import { QuestionnaireDialog } from "@/components/questionnaires/questionnaire-dialog";
+import type { Project, QuestionnaireSubmission } from "@/lib/types";
 import { getInitials, formatCurrency, formatDate } from "@/lib/utils";
 import type { HeatLevel, Customer } from "@/lib/types";
 
@@ -55,6 +60,12 @@ export default function LeadDetailPage() {
   const { values: cfValues, setValue: setCfValue, saveAll: saveCfAll } = useCustomFieldValues(id, 'lead');
   const { recordings } = useRecordings(id);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
+  const [editProject, setEditProject] = useState<Project | undefined>();
+  const [questionnaireDialogOpen, setQuestionnaireDialogOpen] = useState(false);
+  const [viewQuestionnaire, setViewQuestionnaire] = useState<QuestionnaireSubmission | undefined>();
+  const { projects, addProject, updateProject, deleteProject } = useProjects(id);
+  const { submissions, addSubmission, deleteSubmission } = useQuestionnaires(id);
   const router = useRouter();
 
   // Status label lookup from field definitions
@@ -455,6 +466,107 @@ export default function LeadDetailPage() {
         </div>
       )}
 
+      {/* ── Projects ── */}
+      <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-xl bg-blue-500/15 flex items-center justify-center">
+              <FolderKanban className="h-4 w-4 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-bold">פרויקטים</h3>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => { setEditProject(undefined); setProjectDialogOpen(true); }}>
+            <Plus className="h-4 w-4 me-1" />
+            הוסף פרויקט
+          </Button>
+        </div>
+        {projects.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">אין פרויקטים לליד זה</p>
+        ) : (
+          <div className="space-y-2">
+            {projects.map((project) => (
+              <div key={project.id} className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium truncate">{project.name}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
+                      project.status === "active" ? "bg-emerald-100 text-emerald-700" :
+                      project.status === "completed" ? "bg-blue-100 text-blue-700" :
+                      project.status === "planning" ? "bg-slate-100 text-slate-700" :
+                      "bg-amber-100 text-amber-700"
+                    }`}>
+                      {project.status === "active" ? "פעיל" : project.status === "completed" ? "הושלם" : project.status === "planning" ? "תכנון" : project.status === "on_hold" ? "מושהה" : "בוטל"}
+                    </span>
+                  </div>
+                  {project.priceExclVat != null && (
+                    <p className="text-xs text-emerald-600 mt-0.5">₪{Math.round(project.priceExclVat * 1.17).toLocaleString("he-IL")} כולל מע"מ</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  {project.specDocUrl && (
+                    <a href={project.specDocUrl} target="_blank" rel="noopener noreferrer">
+                      <Button variant="ghost" size="icon" className="h-7 w-7"><ExternalLink className="h-3.5 w-3.5" /></Button>
+                    </a>
+                  )}
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditProject(project); setProjectDialogOpen(true); }}>
+                    <span className="text-xs">✏️</span>
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteProject(project.id)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Questionnaires ── */}
+      <div className="rounded-2xl border bg-card p-5 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-xl bg-violet-500/15 flex items-center justify-center">
+              <BookOpen className="h-4 w-4 text-violet-600" />
+            </div>
+            <h3 className="text-lg font-bold">שאלונים</h3>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => setQuestionnaireDialogOpen(true)}>
+            <Plus className="h-4 w-4 me-1" />
+            שאלון חדש
+          </Button>
+        </div>
+        {submissions.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-4">אין שאלונים לליד זה</p>
+        ) : (
+          <div className="space-y-2">
+            {submissions.map((sub) => {
+              const typeLabel = sub.type === "intro" ? "שאלון היכרות" : sub.type === "business_mapping" ? "מיפוי עסקי" : sub.type === "scalability" ? "סקיילבליות" : "מותאם";
+              return (
+                <div key={sub.id} className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <BookOpen className="h-4 w-4 text-violet-500" />
+                    <div>
+                      <span className="text-sm font-medium">{typeLabel}</span>
+                      {sub.submittedAt && (
+                        <p className="text-xs text-muted-foreground">{new Date(sub.submittedAt).toLocaleDateString("he-IL")}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setViewQuestionnaire(sub)}>
+                      <Eye className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteSubmission(sub.id)}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* ── Interactions ── */}
       <InteractionLog entityType="lead" entityId={id} locale={locale} />
 
@@ -469,6 +581,33 @@ export default function LeadDetailPage() {
           setTaskDialogOpen(false);
         }}
       />
+
+      <ProjectDialog
+        open={projectDialogOpen}
+        onClose={() => setProjectDialogOpen(false)}
+        onSave={async (data) => {
+          if (editProject) await updateProject(editProject.id, data);
+          else await addProject({ ...data, leadId: id });
+        }}
+        initial={editProject}
+        defaultLeadId={id}
+      />
+
+      <QuestionnaireDialog
+        open={questionnaireDialogOpen}
+        onClose={() => setQuestionnaireDialogOpen(false)}
+        onSave={(data) => addSubmission({ ...data, leadId: id })}
+        defaultLeadId={id}
+      />
+
+      {viewQuestionnaire && (
+        <QuestionnaireDialog
+          open={true}
+          onClose={() => setViewQuestionnaire(undefined)}
+          onSave={async () => {}}
+          viewOnly={viewQuestionnaire}
+        />
+      )}
     </div>
   );
 }

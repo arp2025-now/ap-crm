@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Users, UserCheck,
   Wallet, BarChart3, HelpCircle, MessageSquare, Package, FileText,
   Settings, Zap, CheckSquare, CalendarDays, ClipboardList, ScrollText,
-  MessageCircle,
+  MessageCircle, FolderKanban, BookOpen,
 } from "lucide-react";
 
 export const mainNavItems = [
@@ -16,6 +16,8 @@ export const mainNavItems = [
   { key: "finance", href: "/finance", icon: Wallet },
   { key: "forms", href: "/forms", icon: ClipboardList },
   { key: "automations", href: "/automations", icon: Zap },
+  { key: "projects", href: "/projects", icon: FolderKanban },
+  { key: "questionnaires", href: "/questionnaires", icon: BookOpen },
   { key: "analytics", href: "/analytics", icon: BarChart3 },
   { key: "whatsapp", href: "/whatsapp", icon: MessageCircle },
 ] as const;

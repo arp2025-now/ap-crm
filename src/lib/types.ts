@@ -604,6 +604,43 @@ export interface WhatsappLog {
   source: WhatsappSource
 }
 
+// ── Projects ──
+
+export type ProjectType = 'automation' | 'crm'
+export type ProjectStatus = 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled'
+
+export interface Project {
+  id: string
+  name: string
+  type: ProjectType
+  status: ProjectStatus
+  leadId?: string
+  clientId?: string
+  startDate?: string
+  expectedEndDate?: string
+  actualEndDate?: string
+  priceExclVat?: number
+  notes?: string
+  specDocUrl?: string
+  createdAt: string
+  updatedAt: string
+}
+
+// ── Questionnaires ──
+
+export type QuestionnaireType = 'intro' | 'business_mapping' | 'scalability' | 'custom'
+
+export interface QuestionnaireSubmission {
+  id: string
+  type: QuestionnaireType
+  leadId?: string
+  clientId?: string
+  answers: Record<string, string | number | boolean | string[]>
+  aiSummary?: string
+  submittedAt?: string
+  createdAt: string
+}
+
 // ── Activity Logs ──
 
 export type LogAction = "create" | "update" | "delete" | "convert" | "status_change" | "send" | "import" | "export";
