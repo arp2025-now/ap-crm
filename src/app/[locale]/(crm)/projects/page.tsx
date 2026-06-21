@@ -54,7 +54,7 @@ export default function ProjectsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">פרויקטים</h1>
-          <p className="text-sm text-muted-foreground">{projects.length} פרויקטים סה"כ</p>
+          <p className="text-sm text-muted-foreground">{projects.length} פרויקטים סה&quot;כ</p>
         </div>
         <Button onClick={() => { setEditProject(undefined); setDialogOpen(true); }}>
           <Plus className="h-4 w-4 me-1" />

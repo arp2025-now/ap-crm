@@ -35,7 +35,7 @@ export default function QuestionnairesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">שאלונים</h1>
-          <p className="text-sm text-muted-foreground">{submissions.length} הגשות סה"כ</p>
+          <p className="text-sm text-muted-foreground">{submissions.length} הגשות סה&quot;כ</p>
         </div>
         <Button onClick={() => setDialogOpen(true)}>
           <Plus className="h-4 w-4 me-1" />
