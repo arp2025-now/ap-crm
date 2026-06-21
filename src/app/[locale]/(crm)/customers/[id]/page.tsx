@@ -349,7 +349,7 @@ export default function CustomerProfilePage() {
                     </span>
                   </div>
                   {project.priceExclVat != null && (
-                    <p className="text-xs text-emerald-600 mt-0.5">₪{Math.round(project.priceExclVat * 1.17).toLocaleString("he-IL")} כולל מע"מ</p>
+                    <p className="text-xs text-emerald-600 mt-0.5">₪{Math.round(project.priceExclVat * 1.17).toLocaleString("he-IL")} כולל מע&quot;מ</p>
                   )}
                 </div>
                 <div className="flex items-center gap-1">

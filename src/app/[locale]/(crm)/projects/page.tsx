@@ -75,7 +75,7 @@ export default function ProjectsPage() {
           </p>
         </div>
         <div className="rounded-2xl border bg-card p-5 shadow-sm">
-          <p className="text-xs text-muted-foreground mb-1">שווי כולל מע"מ</p>
+          <p className="text-xs text-muted-foreground mb-1">שווי כולל מע&quot;מ</p>
           <p className="text-2xl font-extrabold text-violet-600">
             ₪{Math.round(totalRevenue).toLocaleString("he-IL")}
           </p>
@@ -133,7 +133,7 @@ export default function ProjectsPage() {
                     )}
                     {project.priceExclVat != null && (
                       <span className="font-semibold text-emerald-600">
-                        ₪{Math.round(project.priceExclVat * (1 + VAT_RATE)).toLocaleString("he-IL")} כולל מע"מ
+                        ₪{Math.round(project.priceExclVat * (1 + VAT_RATE)).toLocaleString("he-IL")} כולל מע&quot;מ
                       </span>
                     )}
                   </div>
