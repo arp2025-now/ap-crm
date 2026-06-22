@@ -463,7 +463,8 @@ export type AutomationAction =
   | "create_field"
   | "sync_accounting"
   | "create_invoice"
-  | "send_whatsapp";
+  | "send_whatsapp"
+  | "score_lead_ai";
 
 export type AutomationConditionOperator =
   | "equals"
@@ -528,6 +529,9 @@ export interface AutomationActionConfig {
   whatsappTemplateName?: string;
   whatsappTemplateLanguage?: string;
   whatsappPhoneField?: string;
+  whatsappBodyParams?: string; // comma-separated lead fields used as template body params
+  // score_lead_ai
+  aiScoringCriteria?: string;
   // general dynamic key access
   [key: string]: string | Record<string, string> | undefined;
 }
@@ -548,6 +552,9 @@ export interface Automation {
   active: boolean;
   lastRunAt?: string;
   runCount: number;
+  isPreset?: boolean;
+  makeScenarioId?: string;
+  category?: string;
   createdAt: string;
   updatedAt: string;
 }

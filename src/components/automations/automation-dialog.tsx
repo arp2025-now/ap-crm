@@ -95,9 +95,9 @@ const TRIGGER_GROUPS = [
 ];
 
 const ACTIONS: AutomationAction[] = [
-  "update_field", "create_instance", "create_field",
-  "send_email", "send_webhook", "create_task", "notify",
-  "sync_accounting", "create_invoice", "send_whatsapp",
+  "send_whatsapp", "score_lead_ai", "send_email", "create_task", "notify",
+  "update_field", "send_webhook", "create_instance", "create_field",
+  "sync_accounting", "create_invoice",
 ];
 
 const TRIGGER_KEYS: Record<AutomationTrigger, string> = {
@@ -129,11 +129,13 @@ const ACTION_KEYS: Record<AutomationAction, string> = {
   sync_accounting: "actionSyncAccounting",
   create_invoice: "actionCreateInvoice",
   send_whatsapp: "actionSendWhatsapp",
+  score_lead_ai: "actionScoreLeadAI",
 };
 
-// Hebrew labels for actions that need a direct string override (not in i18n keys)
+// Hebrew labels for actions
 const ACTION_LABELS_HE: Partial<Record<AutomationAction, string>> = {
   send_whatsapp: "שלח WhatsApp",
+  score_lead_ai: "ניקוד ליד AI",
 };
 
 const TRIGGER_ICONS: Record<string, typeof Zap> = {
@@ -165,6 +167,7 @@ const ACTION_ICONS: Record<AutomationAction, typeof Zap> = {
   sync_accounting: FileSpreadsheet,
   create_invoice: Receipt,
   send_whatsapp: MessageSquare,
+  score_lead_ai: Zap,
 };
 
 const ACTION_COLORS: Record<AutomationAction, string> = {
@@ -178,6 +181,7 @@ const ACTION_COLORS: Record<AutomationAction, string> = {
   sync_accounting: "bg-teal-100 text-teal-700 border-teal-200",
   create_invoice: "bg-orange-100 text-orange-700 border-orange-200",
   send_whatsapp: "bg-green-100 text-green-700 border-green-200",
+  score_lead_ai: "bg-purple-100 text-purple-700 border-purple-200",
 };
 
 // Condition operators
@@ -876,7 +880,7 @@ export function AutomationDialog({ open, onOpenChange, automation, onSave }: Aut
                                 value={cfg.whatsappTemplateName ?? ""}
                                 onChange={(e) => updateStepConfig(i, "whatsappTemplateName", e.target.value)}
                                 className="w-full rounded-lg border bg-background px-2 py-1.5 text-xs font-mono"
-                                placeholder="hello_world"
+                                placeholder="welcome_lead"
                               />
                             </div>
                             <div className="space-y-1">
@@ -892,19 +896,40 @@ export function AutomationDialog({ open, onOpenChange, automation, onSave }: Aut
                             </div>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">שדה טלפון מהליד</label>
-                            <select
-                              value={cfg.whatsappPhoneField ?? "phone"}
-                              onChange={(e) => updateStepConfig(i, "whatsappPhoneField", e.target.value)}
-                              className="w-full rounded-lg border bg-background px-2 py-1.5 text-xs"
-                            >
-                              <option value="phone">טלפון (phone)</option>
-                              <option value="customerEmail">אימייל (customerEmail)</option>
-                            </select>
+                            <label className="text-xs text-muted-foreground">{"שדות לתוך התבנית ({{1}}, {{2}}...)"}</label>
+                            <input
+                              value={cfg.whatsappBodyParams ?? ""}
+                              onChange={(e) => updateStepConfig(i, "whatsappBodyParams", e.target.value)}
+                              className="w-full rounded-lg border bg-background px-2 py-1.5 text-xs font-mono"
+                              placeholder="customerName, company"
+                              dir="ltr"
+                            />
+                            <p className="text-[10px] text-muted-foreground">שמות שדות מהליד, מופרדים בפסיק. לדוגמה: customerName, company</p>
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            ⚠️ נדרשת תבנית מאושרת ב-Meta Business. הגדר WHATSAPP_TOKEN + WHATSAPP_PHONE_NUMBER_ID בהגדרות Vercel.
+                          <p className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 rounded-lg px-2 py-1.5">
+                            נדרשת תבנית מאושרת ב-Meta Business. הגדר WHATSAPP_TOKEN + WHATSAPP_PHONE_NUMBER_ID בסביבת Vercel.
                           </p>
+                        </div>
+                      )}
+
+                      {step.action === "score_lead_ai" && (
+                        <div className="space-y-2">
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">קריטריונים לניקוד (AI יקרא זאת)</label>
+                            <textarea
+                              value={cfg.aiScoringCriteria ?? ""}
+                              onChange={(e) => updateStepConfig(i, "aiScoringCriteria", e.target.value)}
+                              rows={3}
+                              className="w-full rounded-lg border bg-background px-2 py-1.5 text-xs resize-none"
+                              placeholder="לדוגמה: לקוחות עסקים קטנים ובינוניים עם מחזור מעל 50K שח, שצריכים CRM ואוטומציות. ציון גבוה = כאב ברור + תקציב +"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2 bg-purple-50 dark:bg-purple-950/20 rounded-lg px-2 py-1.5">
+                            <Zap className="h-3 w-3 text-purple-500 shrink-0" />
+                            <p className="text-[10px] text-purple-700 dark:text-purple-300">
+                              AI יקרא את פרטי הליד (שם, חברה, הערות, שווי עסקה) וידרג אותו 1-10. הניקוד יעודכן אוטומטית בשדה &quot;ציון AI&quot; של הליד.
+                            </p>
+                          </div>
                         </div>
                       )}
 

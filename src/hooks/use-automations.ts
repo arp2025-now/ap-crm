@@ -126,6 +126,9 @@ function dbToAutomation(row: DbAutomation): Automation {
     steps: (row.steps ?? []) as unknown as Automation["steps"],
     runCount: row.run_count,
     lastRunAt: row.last_run_at ?? undefined,
+    isPreset: row.is_preset ?? false,
+    makeScenarioId: row.make_scenario_id ?? undefined,
+    category: row.category ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

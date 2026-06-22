@@ -110,6 +110,9 @@ export type DbAutomation = {
   steps: Json
   run_count: number
   last_run_at: string | null
+  is_preset: boolean | null
+  make_scenario_id: string | null
+  category: string | null
   created_at: string
   updated_at: string
 }

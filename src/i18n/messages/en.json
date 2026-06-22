@@ -557,6 +557,8 @@
     "actionCreateField": "Create Field",
     "actionSyncAccounting": "Sync with Accounting",
     "actionCreateInvoice": "Create Invoice",
+    "actionSendWhatsapp": "Send WhatsApp",
+    "actionScoreLeadAI": "AI Lead Score",
     "encrypted": "Encrypted",
     "totalWebhooks": "Total Webhooks",
     "activeWebhooks": "Active Webhooks",

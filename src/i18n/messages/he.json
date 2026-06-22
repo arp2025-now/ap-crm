@@ -557,6 +557,8 @@
     "actionCreateField": "צור שדה",
     "actionSyncAccounting": "סנכרן עם הנה\"ח",
     "actionCreateInvoice": "צור חשבונית",
+    "actionSendWhatsapp": "שלח וואטסאפ",
+    "actionScoreLeadAI": "ניקוד AI",
     "encrypted": "מוצפן",
     "totalWebhooks": "סה\"כ וובהוקים",
     "activeWebhooks": "וובהוקים פעילים",

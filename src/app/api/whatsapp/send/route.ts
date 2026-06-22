@@ -15,15 +15,31 @@ export async function POST(req: NextRequest) {
     to: string;
     templateName: string;
     templateLanguage: string;
+    bodyParams?: string[]; // positional template params, e.g. ["Anat", "AP Automations"]
   };
 
-  const { to, templateName, templateLanguage } = body;
+  const { to, templateName, templateLanguage, bodyParams } = body;
 
   if (!to || !templateName) {
     return NextResponse.json(
       { error: "Missing required fields: to, templateName" },
       { status: 400 },
     );
+  }
+
+  const templatePayload: Record<string, unknown> = {
+    name: templateName,
+    language: { code: templateLanguage || "he" },
+  };
+
+  // Add body component with positional params if provided
+  if (bodyParams && bodyParams.length > 0) {
+    templatePayload.components = [
+      {
+        type: "body",
+        parameters: bodyParams.map((p) => ({ type: "text", text: p })),
+      },
+    ];
   }
 
   const metaRes = await fetch(
@@ -38,10 +54,7 @@ export async function POST(req: NextRequest) {
         messaging_product: "whatsapp",
         to,
         type: "template",
-        template: {
-          name: templateName,
-          language: { code: templateLanguage || "he" },
-        },
+        template: templatePayload,
       }),
     },
   );
