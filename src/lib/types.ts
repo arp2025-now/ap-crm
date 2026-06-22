@@ -488,6 +488,8 @@ export interface AutomationTriggerConfig {
   toValue?: string;
   // lead_updated — watch only specific fields
   watchedFields?: string[];
+  // lead_updated — field-to-value rules (UI-level, synced to watchedFields + conditions)
+  fieldRules?: Array<{ field: string; toValue?: string }>;
   // scheduled
   scheduleType?: "daily" | "weekly" | "monthly" | "custom";
   scheduleTime?: string; // HH:mm

@@ -493,45 +493,134 @@ export function AutomationDialog({ open, onOpenChange, automation, onSave }: Aut
                 </div>
               )}
 
-              {/* lead_updated — watched fields */}
-              {trigger === "lead_updated" && (
-                <div className="rounded-xl border bg-white dark:bg-background p-3 space-y-2">
-                  <p className="text-xs font-semibold text-blue-600">הפעל רק כשמשתנה אחד מהשדות</p>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {LEAD_FIELDS.map((f) => {
-                      const watched = triggerConfig.watchedFields ?? [];
-                      const checked = watched.includes(f.key);
+              {/* lead_updated — smart field trigger */}
+              {trigger === "lead_updated" && (() => {
+                const rules: Array<{ field: string; toValue?: string }> =
+                  (triggerConfig.fieldRules as Array<{ field: string; toValue?: string }> | undefined) ?? [];
+
+                const addRule = () => setTriggerConfig({
+                  ...triggerConfig,
+                  fieldRules: [...rules, { field: "status", toValue: "" }],
+                  // keep watchedFields in sync for engine compatibility
+                  watchedFields: [...new Set([...(triggerConfig.watchedFields ?? []), "status"])],
+                });
+
+                const updateRule = (idx: number, patch: Partial<{ field: string; toValue: string }>) => {
+                  const updated = rules.map((r, i) => i === idx ? { ...r, ...patch } : r);
+                  setTriggerConfig({
+                    ...triggerConfig,
+                    fieldRules: updated,
+                    watchedFields: [...new Set(updated.map((r) => r.field))],
+                    // also sync conditions so engine can filter by exact value
+                    conditions: updated
+                      .filter((r) => r.toValue)
+                      .map((r) => ({ field: r.field, operator: "equals" as const, value: r.toValue! })),
+                  });
+                };
+
+                const removeRule = (idx: number) => {
+                  const updated = rules.filter((_, i) => i !== idx);
+                  setTriggerConfig({
+                    ...triggerConfig,
+                    fieldRules: updated,
+                    watchedFields: [...new Set(updated.map((r) => r.field))],
+                    conditions: updated
+                      .filter((r) => r.toValue)
+                      .map((r) => ({ field: r.field, operator: "equals" as const, value: r.toValue! })),
+                  });
+                };
+
+                const STATUS_LABELS: Record<string, string> = {
+                  new: "ליד חדש", contacted: "יצרנו קשר", qualified: "מוכשר",
+                  proposal: "הצעת מחיר", negotiation: "משא ומתן", converted: "הומר ללקוח", lost: "אבד",
+                };
+                const HEAT_LABELS: Record<string, string> = { hot: "חם 🔥", warm: "פושר", cold: "קר ❄️" };
+
+                const getValueOptions = (fieldKey: string) => {
+                  const field = LEAD_FIELDS.find((f) => f.key === fieldKey);
+                  if (!field?.options) return null;
+                  if (fieldKey === "status") return field.options.map((o) => ({ value: o, label: STATUS_LABELS[o] ?? o }));
+                  if (fieldKey === "heatLevel") return field.options.map((o) => ({ value: o, label: HEAT_LABELS[o] ?? o }));
+                  return field.options.map((o) => ({ value: o, label: o }));
+                };
+
+                return (
+                  <div className="rounded-xl border bg-white dark:bg-background p-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold text-blue-600">הפעל כש...</p>
+                      <button
+                        type="button"
+                        onClick={addRule}
+                        className="text-[10px] text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1"
+                      >
+                        <Plus className="h-3 w-3" />
+                        הוסף תנאי
+                      </button>
+                    </div>
+
+                    {rules.length === 0 && (
+                      <div
+                        onClick={addRule}
+                        className="border-2 border-dashed border-blue-200 dark:border-blue-800 rounded-lg p-3 text-center cursor-pointer hover:border-blue-400 transition-colors"
+                      >
+                        <p className="text-xs text-muted-foreground">לחצי להוסיף תנאי</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">לדוגמה: כשסטטוס משתנה להצעת מחיר</p>
+                      </div>
+                    )}
+
+                    {rules.map((rule, idx) => {
+                      const valueOptions = getValueOptions(rule.field);
                       return (
-                        <label
-                          key={f.key}
-                          className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg border cursor-pointer text-xs transition-colors select-none ${
-                            checked ? "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-900/20 dark:border-blue-600" : "border-muted hover:bg-muted/50"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={(e) => {
-                              const current = triggerConfig.watchedFields ?? [];
-                              setTriggerConfig({
-                                ...triggerConfig,
-                                watchedFields: e.target.checked
-                                  ? [...current, f.key]
-                                  : current.filter((k) => k !== f.key),
-                              });
-                            }}
-                            className="w-3 h-3 accent-blue-600"
-                          />
-                          {f.label}
-                        </label>
+                        <div key={idx} className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg px-3 py-2">
+                          {idx > 0 && <span className="text-[10px] font-bold text-muted-foreground shrink-0">או</span>}
+
+                          {/* Field selector */}
+                          <select
+                            value={rule.field}
+                            onChange={(e) => updateRule(idx, { field: e.target.value, toValue: "" })}
+                            className="rounded-lg border bg-background px-2 py-1.5 text-xs flex-1 min-w-0 font-medium"
+                          >
+                            {LEAD_FIELDS.map((f) => (
+                              <option key={f.key} value={f.key}>{f.label}</option>
+                            ))}
+                          </select>
+
+                          <span className="text-xs text-muted-foreground shrink-0">משתנה ל</span>
+
+                          {/* Value selector / input */}
+                          {valueOptions ? (
+                            <select
+                              value={rule.toValue ?? ""}
+                              onChange={(e) => updateRule(idx, { toValue: e.target.value })}
+                              className="rounded-lg border bg-background px-2 py-1.5 text-xs flex-1 min-w-0"
+                            >
+                              <option value="">כל ערך</option>
+                              {valueOptions.map((o) => (
+                                <option key={o.value} value={o.value}>{o.label}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              value={rule.toValue ?? ""}
+                              onChange={(e) => updateRule(idx, { toValue: e.target.value })}
+                              className="rounded-lg border bg-background px-2 py-1.5 text-xs flex-1 min-w-0"
+                              placeholder="כל ערך"
+                            />
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => removeRule(idx)}
+                            className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       );
                     })}
                   </div>
-                  {(triggerConfig.watchedFields ?? []).length === 0 && (
-                    <p className="text-xs text-muted-foreground">ללא סינון — יופעל על כל שינוי בליד</p>
-                  )}
-                </div>
-              )}
+                );
+              })()}
             </div>
           </div>
 
