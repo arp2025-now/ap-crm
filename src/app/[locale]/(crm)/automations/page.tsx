@@ -251,11 +251,15 @@ export default function AutomationsPage() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <p className="font-semibold text-sm">{auto.name}</p>
-                              {auto.isPreset && (
+                              {auto.makeScenarioId ? (
                                 <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 border border-orange-200 dark:border-orange-800">
                                   ⚡ Make
                                 </span>
-                              )}
+                              ) : auto.isPreset ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                                  ✦ ברירת מחדל
+                                </span>
+                              ) : null}
                               {!auto.active && (
                                 <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 dark:bg-slate-800">
                                   כבוי
@@ -297,16 +301,14 @@ export default function AutomationsPage() {
                                 <ExternalLink className="h-3.5 w-3.5" />
                               </a>
                             )}
-                            {!auto.isPreset && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => { setEditingAutomation(auto); setAutomationDialog(true); }}
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => { setEditingAutomation(auto); setAutomationDialog(true); }}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
                             {!auto.isPreset && (
                               <Button
                                 variant="ghost"
