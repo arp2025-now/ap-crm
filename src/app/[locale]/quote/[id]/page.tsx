@@ -213,10 +213,7 @@ export default function PublicQuotePage() {
                   <div key={section.id || idx} className="rounded-lg border p-4">
                     <span
                       className="inline-block rounded-full px-3 py-1 text-xs font-semibold mb-2"
-                      style={{
-                        backgroundColor: idx % 2 === 0 ? `${brand.secondaryColor}18` : `${brand.primaryColor}15`,
-                        color: idx % 2 === 0 ? brand.secondaryColor : brand.primaryColor,
-                      }}
+                      style={{ backgroundColor: `${brand.primaryColor}15`, color: brand.primaryColor }}
                     >
                       {section.title}
                     </span>
@@ -229,7 +226,10 @@ export default function PublicQuotePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {quote.notes && (
                 <div className="rounded-lg border p-4">
-                  <span className="inline-block bg-secondary/10 text-secondary rounded-full px-3 py-1 text-xs font-semibold mb-2">
+                  <span
+                    className="inline-block rounded-full px-3 py-1 text-xs font-semibold mb-2"
+                    style={{ backgroundColor: `${brand.primaryColor}15`, color: brand.primaryColor }}
+                  >
                     {t("notes")}
                   </span>
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
@@ -237,7 +237,10 @@ export default function PublicQuotePage() {
               )}
               {quote.terms && (
                 <div className="rounded-lg border p-4">
-                  <span className="inline-block bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-semibold mb-2">
+                  <span
+                    className="inline-block rounded-full px-3 py-1 text-xs font-semibold mb-2"
+                    style={{ backgroundColor: `${brand.primaryColor}15`, color: brand.primaryColor }}
+                  >
                     {t("terms")}
                   </span>
                   <p className="text-sm text-muted-foreground whitespace-pre-wrap">{quote.terms}</p>
@@ -258,7 +261,7 @@ export default function PublicQuotePage() {
                     alt="Signature"
                     className="h-16 object-contain"
                   />
-                  <div className="flex items-center gap-2 text-sm" style={{ color: brand.secondaryColor }}>
+                  <div className="flex items-center gap-2 text-sm" style={{ color: brand.primaryColor }}>
                     <CheckCircle2 className="h-5 w-5" />
                     <span>
                       {t("signedOn")}{" "}
@@ -278,7 +281,7 @@ export default function PublicQuotePage() {
             ) : null}
 
             {signed && (
-              <div className="mt-4 rounded-lg border p-4 flex items-center gap-3" style={{ backgroundColor: `${brand.secondaryColor}15`, borderColor: `${brand.secondaryColor}30`, color: brand.secondaryColor }}>
+              <div className="mt-4 rounded-lg border p-4 flex items-center gap-3" style={{ backgroundColor: `${brand.primaryColor}10`, borderColor: `${brand.primaryColor}30`, color: brand.primaryColor }}>
                 <CheckCircle2 className="h-6 w-6 flex-shrink-0" />
                 <p className="text-sm font-medium">{t("signedSuccessfully")}</p>
               </div>
@@ -288,7 +291,7 @@ export default function PublicQuotePage() {
 
         {/* Footer */}
         <div className="px-6 md:px-8 pb-6">
-          <div className="h-1 rounded-full mb-4" style={{ background: `linear-gradient(to right, ${brand.primaryColor}, ${brand.secondaryColor})` }} />
+          <div className="h-px mb-4" style={{ backgroundColor: `${brand.primaryColor}30` }} />
           <div className="text-center space-y-1">
             <p className="text-sm text-muted-foreground">{t("thankYouMessage")}</p>
             <p className="text-xs text-muted-foreground/60 font-medium">{brand.companyName}</p>
