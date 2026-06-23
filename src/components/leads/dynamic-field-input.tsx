@@ -58,14 +58,27 @@ export function DynamicFieldInput({ field, value, onChange, placeholder }: Dynam
     case "dropdown":
     case "status": {
       const options = field.options ?? [];
+      const selected = options.find((o) => o.id === strVal);
       return (
         <Select value={strVal || undefined} onValueChange={(v) => onChange(v ?? null)}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder={`בחר ${field.name}`} />
+            {selected ? (
+              <span className="flex items-center gap-2 text-sm">
+                {selected.color && field.type === "status" && (
+                  <span
+                    className="inline-block h-2.5 w-2.5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: selected.color }}
+                  />
+                )}
+                {selected.label}
+              </span>
+            ) : (
+              <SelectValue placeholder={`בחר ${field.name}`} />
+            )}
           </SelectTrigger>
           <SelectContent>
             {options.map((opt) => (
-              <SelectItem key={opt.id} value={opt.id} textValue={opt.label}>
+              <SelectItem key={opt.id} value={opt.id}>
                 <span className="flex items-center gap-2">
                   {opt.color && field.type === "status" && (
                     <span
