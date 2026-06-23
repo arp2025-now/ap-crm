@@ -3,6 +3,7 @@
 import { Suspense, useState, use } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useBranding } from '@/hooks/use-branding'
 
 function LoginForm({ locale }: { locale: string }) {
   const [email, setEmail] = useState('')
@@ -55,7 +56,7 @@ function LoginForm({ locale }: { locale: string }) {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-blue-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+        className="w-full bg-gray-900 text-white rounded-lg py-2 text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
       >
         {loading ? 'מתחבר...' : 'התחברי'}
       </button>
@@ -63,20 +64,36 @@ function LoginForm({ locale }: { locale: string }) {
   )
 }
 
-export default function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = use(params)
+function LoginContent({ locale }: { locale: string }) {
+  const { branding } = useBranding()
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50" dir="rtl">
-      <div className="w-full max-w-md bg-white rounded-xl shadow p-8 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">AP Automations CRM</h1>
-          <p className="text-gray-500 text-sm mt-1">התחברי למערכת</p>
+      <div className="w-full max-w-sm bg-white rounded-xl border border-gray-200 p-8 space-y-6">
+        {/* Logo + name */}
+        <div className="flex flex-col items-center gap-3 pb-2">
+          {branding.logoDataUrl ? (
+            <img src={branding.logoDataUrl} alt={branding.companyName} className="h-12 w-12 object-contain" />
+          ) : (
+            <div className="h-12 w-12 rounded-xl bg-gray-900 flex items-center justify-center text-white font-bold text-lg">
+              {branding.companyName.charAt(0)}
+            </div>
+          )}
+          <div className="text-center">
+            <h1 className="text-lg font-bold text-gray-900">{branding.companyName}</h1>
+            <p className="text-gray-400 text-sm mt-0.5">התחברי למערכת</p>
+          </div>
         </div>
+
         <Suspense fallback={<div className="text-sm text-gray-400">טוען...</div>}>
           <LoginForm locale={locale} />
         </Suspense>
       </div>
     </div>
   )
+}
+
+export default function LoginPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = use(params)
+  return <LoginContent locale={locale} />
 }
