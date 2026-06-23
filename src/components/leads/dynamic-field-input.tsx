@@ -65,7 +65,7 @@ export function DynamicFieldInput({ field, value, onChange, placeholder }: Dynam
           </SelectTrigger>
           <SelectContent>
             {options.map((opt) => (
-              <SelectItem key={opt.id} value={opt.id}>
+              <SelectItem key={opt.id} value={opt.id} textValue={opt.label}>
                 <span className="flex items-center gap-2">
                   {opt.color && field.type === "status" && (
                     <span

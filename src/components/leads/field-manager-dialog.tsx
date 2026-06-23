@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Pencil, Trash2, Plus, Lock, Check, X, GripVertical } from "lucide-react";
+import { Pencil, Trash2, Plus, Lock, Check, X, GripVertical, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -106,6 +106,8 @@ export function FieldManagerDialog({
   const removeNewOption = (optId: string) =>
     setNewOptions((prev) => prev.filter((o) => o.id !== optId));
 
+  const [showIds, setShowIds] = useState(false);
+
   const systemFields = fields.filter((f) => f.isSystem);
   const customFields = fields.filter((f) => !f.isSystem);
 
@@ -113,7 +115,21 @@ export function FieldManagerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto" showCloseButton>
         <DialogHeader>
-          <DialogTitle>{t("manageFields")}</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>{t("manageFields")}</DialogTitle>
+            <button
+              onClick={() => setShowIds((v) => !v)}
+              className={cn(
+                "flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border transition-colors me-6",
+                showIds
+                  ? "bg-primary/10 border-primary/30 text-primary"
+                  : "border-border text-muted-foreground hover:bg-muted"
+              )}
+            >
+              <Hash className="h-3 w-3" />
+              מזהים
+            </button>
+          </div>
         </DialogHeader>
 
         <div className="grid gap-6 py-2">
@@ -127,6 +143,7 @@ export function FieldManagerDialog({
                 <FieldRow
                   key={field.id}
                   field={field}
+                  showId={showIds}
                   isEditing={editingId === field.id}
                   editName={editName}
                   editOptions={editOptions}
@@ -160,6 +177,7 @@ export function FieldManagerDialog({
                 <FieldRow
                   key={field.id}
                   field={field}
+                  showId={showIds}
                   isEditing={editingId === field.id}
                   editName={editName}
                   editOptions={editOptions}
@@ -238,6 +256,7 @@ export function FieldManagerDialog({
 
 interface FieldRowProps {
   field: FieldDefinition;
+  showId?: boolean;
   isEditing: boolean;
   editName: string;
   editOptions: FieldOption[];
@@ -256,7 +275,7 @@ interface FieldRowProps {
 }
 
 function FieldRow({
-  field, isEditing, editName, editOptions, newOptionLabel, newOptionColor, presetColors,
+  field, showId, isEditing, editName, editOptions, newOptionLabel, newOptionColor, presetColors,
   onEditNameChange, onStartEdit, onSaveEdit, onCancelEdit, onDelete,
   onAddOption, onRemoveOption, onNewOptionLabelChange, onNewOptionColorChange,
 }: FieldRowProps) {
@@ -264,6 +283,23 @@ function FieldRow({
 
   return (
     <div className={cn("rounded-lg border px-3 py-2 grid gap-2 transition-colors", isEditing && "bg-muted/30")}>
+      {showId && (
+        <div className="flex flex-col gap-1 ps-6 pb-1 border-b border-dashed border-border/50">
+          <code className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded w-fit">
+            field: {field.id}
+          </code>
+          {field.options && field.options.map((opt) => (
+            <div key={opt.id} className="flex items-center gap-2">
+              {opt.color && (
+                <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: opt.color }} />
+              )}
+              <code className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                {opt.label}: {opt.id}
+              </code>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="flex items-center gap-2">
         {!field.isSystem && (
           <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab flex-shrink-0" />
